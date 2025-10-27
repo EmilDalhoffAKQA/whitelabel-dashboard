@@ -9,6 +9,12 @@ export default function Magic() {
     message: string;
   }>(null);
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<"code" | "link">("code");
+  const [otp, setOtp] = useState("");
+  const [verified, setVerified] = useState<null | { access_token?: string }>(
+    null
+  );
+  const [verifying, setVerifying] = useState(false);
 
   async function sendMagicLink(e: React.FormEvent) {
     e.preventDefault();
@@ -17,7 +23,10 @@ export default function Magic() {
       return setStatus({ type: "error", message: "Please enter an email." });
     setLoading(true);
     try {
-      const params = new URLSearchParams({ email });
+      const params = new URLSearchParams({
+        email,
+        send: mode === "code" ? "code" : "link",
+      });
       const res = await fetch(
         `/api/auth/passwordless/start?${params.toString()}`
       );
@@ -41,7 +50,9 @@ export default function Magic() {
           message:
             body?.message ||
             body?.status ||
-            "Magic link sent (check your email).",
+            (mode === "code"
+              ? "Code sent to your email."
+              : "Magic link sent (check your email)."),
         });
       }
     } catch (err: any) {
@@ -51,10 +62,69 @@ export default function Magic() {
     }
   }
 
+  async function verifyOtp(e?: React.FormEvent) {
+    e?.preventDefault();
+    setStatus(null);
+    if (!email) return setStatus({ type: "error", message: "Missing email." });
+    if (!otp)
+      return setStatus({
+        type: "error",
+        message: "Enter the code from email.",
+      });
+    setVerifying(true);
+    try {
+      const res = await fetch(`/api/auth/passwordless/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
+      const text = await res.text();
+      let body: any = text;
+      try {
+        body = JSON.parse(text);
+      } catch {}
+      if (!res.ok) {
+        setStatus({
+          type: "error",
+          message: body?.error || text || `Verify failed (${res.status})`,
+        });
+      } else {
+        setVerified(body);
+        setStatus({
+          type: "success",
+          message: "Verified — you are signed in (tokens shown below).",
+        });
+      }
+    } catch (err: any) {
+      setStatus({ type: "error", message: err?.message || String(err) });
+    } finally {
+      setVerifying(false);
+    }
+  }
+
   return (
     <main style={{ maxWidth: 560, margin: "48px auto", padding: 16 }}>
       <h1>Sign in with a magic link</h1>
       <form onSubmit={sendMagicLink}>
+        <p style={{ marginTop: 0 }}>
+          Use{" "}
+          <label style={{ fontWeight: 600, marginLeft: 6 }}>
+            <input
+              type="radio"
+              checked={mode === "code"}
+              onChange={() => setMode("code")}
+            />{" "}
+            Code
+          </label>
+          <label style={{ fontWeight: 600, marginLeft: 12 }}>
+            <input
+              type="radio"
+              checked={mode === "link"}
+              onChange={() => setMode("link")}
+            />{" "}
+            Magic link
+          </label>
+        </p>
         <label style={{ display: "block", marginBottom: 8 }}>
           Email
           <input
@@ -79,6 +149,51 @@ export default function Magic() {
           {loading ? "Sending…" : "Send magic link"}
         </button>
       </form>
+
+      {mode === "code" && (
+        <form onSubmit={verifyOtp} style={{ marginTop: 16 }}>
+          <label style={{ display: "block", marginBottom: 8 }}>
+            Code from email
+            <input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              placeholder="123456"
+              style={{
+                display: "block",
+                width: "100%",
+                padding: 8,
+                marginTop: 6,
+              }}
+            />
+          </label>
+          <div>
+            <button
+              onClick={verifyOtp}
+              disabled={verifying}
+              style={{ padding: "8px 12px" }}
+            >
+              {verifying ? "Verifying…" : "Verify code"}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {verified && (
+        <div
+          style={{
+            marginTop: 18,
+            background: "#f6fffa",
+            padding: 12,
+            borderRadius: 6,
+          }}
+        >
+          <strong>Token response:</strong>
+          <pre style={{ whiteSpace: "pre-wrap", marginTop: 8 }}>
+            {JSON.stringify(verified, null, 2)}
+          </pre>
+        </div>
+      )}
 
       {status && (
         <div
