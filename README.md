@@ -34,3 +34,42 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Testing magic links (Auth0)
+
+Two quick ways to start a Passwordless (magic link) flow that work with Classic Universal Login:
+
+1. In-browser widget (recommended)
+
+   - Start the dev server:
+
+     ```bash
+     npm run dev
+     ```
+
+   - Open the page that loads Auth0's Lock Passwordless widget:
+
+     http://localhost:3001/magic
+
+     Note: Next may pick a different port if 3000 is busy (check the terminal output).
+
+   - Enter your email in the widget, then open the email in the same browser and click the magic link. You should be redirected to `/api/auth/callback` and authenticated.
+
+2. Server-side proxy (useful for testing from Postman or a link)
+
+   - The app exposes a convenience GET endpoint that forwards to Auth0's `/passwordless/start`:
+
+     GET /api/auth/passwordless/start?email=you@example.com
+
+   - This endpoint expects these environment variables to be set (locally or in your deployment):
+
+     - AUTH0_ISSUER_BASE_URL (or AUTH0_DOMAIN)
+     - AUTH0_CLIENT_ID
+     - AUTH0_CLIENT_SECRET
+     - AUTH0_BASE_URL (optional, used to build redirect URI; defaults to http://localhost:3000)
+
+   - Example in the browser or Postman:
+
+     http://localhost:3001/api/auth/passwordless/start?email=you@example.com
+
+   - Important: For Classic magic links, open the email link in the same browser you used to hit the start URL.
