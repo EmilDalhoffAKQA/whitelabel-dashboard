@@ -7,7 +7,10 @@ export async function POST(req: Request) {
     const otp = body?.otp || body?.verification_code;
 
     if (!email || !otp) {
-      return NextResponse.json({ error: "Missing email or otp" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing email or otp" },
+        { status: 400 }
+      );
     }
 
     const issuer = process.env.AUTH0_ISSUER_BASE_URL;
@@ -42,6 +45,9 @@ export async function POST(req: Request) {
       return new NextResponse(text, { status: tokenRes.status });
     }
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });
+    return NextResponse.json(
+      { error: err?.message || String(err) },
+      { status: 500 }
+    );
   }
 }
