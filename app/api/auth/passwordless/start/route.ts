@@ -19,6 +19,22 @@ export async function GET(req: Request) {
   const clientSecret = process.env.AUTH0_CLIENT_SECRET;
 
   if (!issuer || !clientId || !clientSecret) {
+    // If DEBUG_AUTH0=1 is set in the environment we return which values are missing
+    // (do NOT return secrets). This is helpful for debugging deployment/env issues.
+    if (process.env.DEBUG_AUTH0 === "1") {
+      const missing: string[] = [];
+      if (!issuer) missing.push("AUTH0_ISSUER_BASE_URL or AUTH0_DOMAIN");
+      if (!clientId) missing.push("AUTH0_CLIENT_ID");
+      if (!clientSecret) missing.push("AUTH0_CLIENT_SECRET");
+      return NextResponse.json(
+        {
+          error: "Server misconfiguration: missing AUTH0 settings",
+          missing,
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Server misconfiguration: missing AUTH0 settings" },
       { status: 500 }
