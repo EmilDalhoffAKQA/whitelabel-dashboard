@@ -4,6 +4,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const email = url.searchParams.get("email");
   const connection = url.searchParams.get("connection") || "email";
+  const sendParam = url.searchParams.get("send") || "link";
   const organization = url.searchParams.get("organization") || undefined;
 
   if (!email) {
@@ -47,11 +48,11 @@ export async function GET(req: Request) {
     "http://localhost:3000";
   const redirectUri = `${baseUrl.replace(/\/$/, "")}/api/auth/callback`;
 
-  const payload = {
+  const payload: any = {
     client_id: clientId,
     connection,
     email,
-    send: "link",
+    send: sendParam, // "link" or "code"
     authParams: {
       redirect_uri: redirectUri,
       scope: "openid profile email",
