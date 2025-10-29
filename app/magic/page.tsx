@@ -9,7 +9,7 @@ export default function Magic() {
     message: string;
   }>(null);
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<"code" | "link">("code");
+  const [mode, setMode] = useState<"code" | "link">("code"); // Changed default to "code"
   const [otp, setOtp] = useState("");
   const [verified, setVerified] = useState<null | { access_token?: string }>(
     null
@@ -51,7 +51,7 @@ export default function Magic() {
             body?.message ||
             body?.status ||
             (mode === "code"
-              ? "Code sent to your email."
+              ? "Code sent to your email. Check your inbox!"
               : "Magic link sent (check your email)."),
         });
       }
@@ -92,7 +92,7 @@ export default function Magic() {
         setVerified(body);
         setStatus({
           type: "success",
-          message: "Verified — you are signed in (tokens shown below).",
+          message: "✓ Verified — you are signed in!",
         });
       }
     } catch (err: any) {
@@ -104,17 +104,17 @@ export default function Magic() {
 
   return (
     <main style={{ maxWidth: 560, margin: "48px auto", padding: 16 }}>
-      <h1>Sign in with a magic link</h1>
+      <h1>Sign in with passwordless authentication</h1>
       <form onSubmit={sendMagicLink}>
         <p style={{ marginTop: 0 }}>
-          Use{" "}
+          Choose method:{" "}
           <label style={{ fontWeight: 600, marginLeft: 6 }}>
             <input
               type="radio"
               checked={mode === "code"}
               onChange={() => setMode("code")}
             />{" "}
-            Code
+            Email code (recommended)
           </label>
           <label style={{ fontWeight: 600, marginLeft: 12 }}>
             <input
@@ -125,6 +125,23 @@ export default function Magic() {
             Magic link
           </label>
         </p>
+
+        {mode === "link" && (
+          <div
+            style={{
+              padding: 12,
+              background: "#fff3cd",
+              border: "1px solid #ffc107",
+              borderRadius: 6,
+              marginBottom: 12,
+              fontSize: 14,
+            }}
+          >
+            ⚠️ Magic links may fail if opened in a different browser. Use "Email
+            code" instead for better reliability.
+          </div>
+        )}
+
         <label style={{ display: "block", marginBottom: 8 }}>
           Email
           <input
@@ -146,7 +163,11 @@ export default function Magic() {
           disabled={loading}
           style={{ padding: "8px 12px" }}
         >
-          {loading ? "Sending…" : "Send magic link"}
+          {loading
+            ? "Sending…"
+            : mode === "code"
+            ? "Send code"
+            : "Send magic link"}
         </button>
       </form>
 
@@ -169,7 +190,7 @@ export default function Magic() {
           </label>
           <div>
             <button
-              onClick={verifyOtp}
+              type="submit"
               disabled={verifying}
               style={{ padding: "8px 12px" }}
             >
@@ -188,8 +209,8 @@ export default function Magic() {
             borderRadius: 6,
           }}
         >
-          <strong>Token response:</strong>
-          <pre style={{ whiteSpace: "pre-wrap", marginTop: 8 }}>
+          <strong>✓ Authentication successful!</strong>
+          <pre style={{ whiteSpace: "pre-wrap", marginTop: 8, fontSize: 12 }}>
             {JSON.stringify(verified, null, 2)}
           </pre>
         </div>
@@ -199,7 +220,14 @@ export default function Magic() {
         <div
           style={{
             marginTop: 16,
-            color: status.type === "error" ? "#a00" : "#080",
+            padding: 12,
+            borderRadius: 6,
+            color: status.type === "error" ? "#721c24" : "#155724",
+            background: status.type === "error" ? "#f8d7da" : "#d4edda",
+            border:
+              status.type === "error"
+                ? "1px solid #f5c6cb"
+                : "1px solid #c3e6cb",
           }}
         >
           {status.message}
