@@ -4,9 +4,8 @@ import { supabaseAdmin } from "@/lib/supabase";
 // GET /api/user/[email]/workspaces
 export async function GET(
   req: NextRequest,
-  context: { params: { email: string } }
+  { params }: { params: { email: string } }
 ) {
-  const { params } = context;
   const email = decodeURIComponent(params.email);
   if (!email) {
     return NextResponse.json({ error: "Missing email" }, { status: 400 });
