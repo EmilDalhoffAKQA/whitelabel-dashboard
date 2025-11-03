@@ -54,9 +54,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // (Optional) 4. Create org in Auth0 via Management API (not implemented here)
-    // (Optional) 5. Create user in Auth0 if not exists (handled in invite step)
-
     return NextResponse.json({ workspace, user: dbUser });
   } catch (e) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
