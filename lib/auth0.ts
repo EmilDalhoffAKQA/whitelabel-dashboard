@@ -34,7 +34,11 @@ export async function getManagementApiToken(): Promise<string> {
   return cachedToken.access_token;
 }
 
-export async function createAuth0User(email: string, name: string, password: string) {
+export async function createAuth0User(
+  email: string,
+  name: string,
+  password: string
+) {
   const token = await getManagementApiToken();
 
   const response = await fetch(
