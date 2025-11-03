@@ -7,7 +7,7 @@ export function middleware(request: NextRequest) {
 
   // Protected routes - ADD /admin and /workspaces
   const protectedRoutes = ["/dashboard", "/admin", "/workspaces"];
-  const isProtectedRoute = protectedRoutes.some(route => 
+  const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
   );
 
@@ -28,8 +28,8 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
-    "/admin/:path*",      // ADD THIS
+    "/admin/:path*", // ADD THIS
     "/workspaces/:path*", // ADD THIS
-    "/login"
+    "/login",
   ],
 };

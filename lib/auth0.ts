@@ -2,7 +2,9 @@ export async function getUserByEmail(email: string) {
   const token = await getManagementApiToken();
 
   const response = await fetch(
-    `https://${process.env.AUTH0_DOMAIN}/api/v2/users-by-email?email=${encodeURIComponent(email)}`,
+    `https://${
+      process.env.AUTH0_DOMAIN
+    }/api/v2/users-by-email?email=${encodeURIComponent(email)}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

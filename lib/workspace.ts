@@ -11,6 +11,5 @@ export async function getWorkspaceByIdentifier(identifier: string) {
     throw new Error("Workspace not found: " + identifier);
   }
 
-
   return data;
 }
