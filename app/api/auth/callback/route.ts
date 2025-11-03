@@ -1,28 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { getWorkspaceByIdentifier } from "@/lib/workspace";
 
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
     const code = searchParams.get("code");
-    const workspace = searchParams.get("workspace");
     const error = searchParams.get("error");
 
     if (error) {
       console.error("Auth0 callback error:", error);
       return NextResponse.redirect(
-        `${process.env.NEXTAUTH_URL}/login?error=${error}&workspace=${workspace}`
+        `${process.env.NEXTAUTH_URL}/login?error=${error}`
       );
     }
 
-    if (!code || !workspace) {
+    if (!code) {
       return NextResponse.redirect(
         `${process.env.NEXTAUTH_URL}/login?error=missing_params`
       );
     }
-
-    const workspaceData = await getWorkspaceByIdentifier(workspace);
 
     const tokenResponse = await fetch(
       `https://${process.env.AUTH0_DOMAIN}/oauth/token`,
@@ -35,8 +31,8 @@ export async function GET(req: NextRequest) {
           grant_type: "authorization_code",
           client_id: process.env.AUTH0_CLIENT_ID,
           client_secret: process.env.AUTH0_CLIENT_SECRET,
-          code: code,
-          redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback?workspace=${workspace}`,
+          code,
+          redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback`,
         }),
       }
     );
@@ -45,7 +41,7 @@ export async function GET(req: NextRequest) {
       const error = await tokenResponse.json();
       console.error("Token exchange error:", error);
       return NextResponse.redirect(
-        `${process.env.NEXTAUTH_URL}/login?error=auth_failed&workspace=${workspace}`
+        `${process.env.NEXTAUTH_URL}/login?error=auth_failed`
       );
     }
 
@@ -62,14 +58,14 @@ export async function GET(req: NextRequest) {
 
     const userInfo = await userResponse.json();
 
-    await syncUserToSupabase(userInfo, workspaceData);
+    await syncUserToSupabase(userInfo);
 
     const response = NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}/dashboard?workspace=${workspace}`
+      `${process.env.NEXTAUTH_URL}/workspaces` // workspace picker page
     );
 
     response.cookies.set("auth_token", tokens.id_token, {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7,
@@ -77,14 +73,6 @@ export async function GET(req: NextRequest) {
     });
 
     response.cookies.set("user_info", JSON.stringify(userInfo), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7,
-      path: "/",
-    });
-
-    response.cookies.set("current_workspace", workspace, {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -101,7 +89,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-async function syncUserToSupabase(auth0User: any, workspace: any) {
+async function syncUserToSupabase(auth0User: any) {
   const { data: user, error: userError } = await supabaseAdmin
     .from("users")
     .upsert(
@@ -118,13 +106,5 @@ async function syncUserToSupabase(auth0User: any, workspace: any) {
   if (userError || !user) {
     throw new Error("Failed to sync user");
   }
-
-  await supabaseAdmin.from("user_workspaces").upsert(
-    {
-      user_id: user.id,
-      workspace_id: workspace.id,
-      role: "viewer",
-    },
-    { onConflict: "user_id,workspace_id" }
-  );
+  // No workspace logic here; just ensure user exists.
 }
