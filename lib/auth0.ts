@@ -1,3 +1,22 @@
+export async function getUserByEmail(email: string) {
+  const token = await getManagementApiToken();
+
+  const response = await fetch(
+    `https://${process.env.AUTH0_DOMAIN}/api/v2/users-by-email?email=${encodeURIComponent(email)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to get user");
+  }
+
+  const users = await response.json();
+  return users[0] || null;
+}
 interface ManagementApiToken {
   access_token: string;
   expires_at: number;

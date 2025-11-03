@@ -11,9 +11,6 @@ export async function getWorkspaceByIdentifier(identifier: string) {
     throw new Error("Workspace not found: " + identifier);
   }
 
-  if (!data.auth0_org_id) {
-    throw new Error("Workspace does not have Auth0 organization configured");
-  }
 
   return data;
 }
