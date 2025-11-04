@@ -1,5 +1,4 @@
-export type UserRole = "admin" | "analyst" | "viewer";
-
+export type UserRole = "superadmin" | "admin" | "editor";
 export interface Workspace {
   id: string;
   name: string;
