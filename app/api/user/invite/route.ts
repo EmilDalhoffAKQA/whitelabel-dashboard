@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
         .upsert({
           user_id: dbUser.id,
           workspace_id: workspaceId,
-          role: role || "analyst",
+          role: role || "editor",
         });
       if (uwError) {
         console.error("Supabase user_workspaces error:", uwError);

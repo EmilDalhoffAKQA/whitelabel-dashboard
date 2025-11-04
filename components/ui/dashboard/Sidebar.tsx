@@ -6,7 +6,6 @@ import {
 } from "@/components/ui/navigation-menu";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useTheme } from "@/lib/theme";
 
 type NavItem = {
   href: string;
@@ -25,18 +24,15 @@ export function Sidebar({
   user: User;
   navItems: NavItem[];
 }) {
-  const theme = useTheme();
-  const logo = theme?.logo;
-  const primaryColor = theme?.primaryColor ?? "blue";
+  // Use CSS variables for theming (logo can be passed as a prop if needed)
+  const logo = undefined; // Replace with a prop or static asset if needed
+  const primaryColor = "var(--primary, blue)";
 
   return (
     <aside className="h-screen w-64 bg-white border-r flex flex-col">
       <div className="flex items-center justify-center h-20 border-b">
-        {logo ? (
-          <img src={logo} alt="Logo" className="h-10" />
-        ) : (
-          <span className="font-bold text-xl">Dashboard</span>
-        )}
+        {/* Replace logo logic with static or prop-based logo if needed */}
+        <span className="font-bold text-xl">Dashboard</span>
       </div>
       <NavigationMenu>
         <NavigationMenuList className="flex flex-col gap-2 p-4">

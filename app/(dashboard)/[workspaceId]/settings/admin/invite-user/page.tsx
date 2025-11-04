@@ -5,7 +5,7 @@ export default function AdminInviteUserPage() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [workspaceId, setWorkspaceId] = useState("");
-  const [role, setRole] = useState("editor");
+  const [role, setRole] = useState("analyst");
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
@@ -87,7 +87,7 @@ export default function AdminInviteUserPage() {
             onChange={(e) => setRole(e.target.value)}
             style={{ width: "100%" }}
           >
-            <option value="editor">Editor</option>
+            <option value="analyst">Analyst</option>
             <option value="admin">Admin</option>
           </select>
         </label>

@@ -5,11 +5,9 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("auth_token");
   const pathname = request.nextUrl.pathname;
 
-  // Protected routes - ADD /admin and /workspaces
-  const protectedRoutes = ["/dashboard", "/admin", "/workspaces"];
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  // Protect all /[workspaceId]/* routes and /workspaces
+  const isProtectedRoute =
+    /^\/[^/]+\//.test(pathname) || pathname.startsWith("/workspaces");
 
   // Redirect to login if accessing protected route without token
   if (!token && isProtectedRoute) {
@@ -27,9 +25,9 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/admin/:path*", // ADD THIS
-    "/workspaces/:path*", // ADD THIS
+    // Protect all workspaceId routes
+    "/(dashboard)/[workspaceId]/:path*",
+    "/workspaces/:path*",
     "/login",
   ],
 };

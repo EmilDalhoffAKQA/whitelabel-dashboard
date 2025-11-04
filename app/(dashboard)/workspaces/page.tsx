@@ -45,7 +45,7 @@ export default function WorkspacesPage() {
     document.cookie = `current_workspace=${encodeURIComponent(
       ws.id
     )}; path=/; max-age=${60 * 60 * 24 * 7}`;
-    window.location.href = `/admin/invite-user`;
+    window.location.href = `/${ws.id}/dashboard`;
   }
 
   function handleLogout() {
