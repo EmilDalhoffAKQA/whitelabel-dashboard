@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import ClientRoot from "@/components/ClientRoot";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,12 +23,19 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // You can later fetch this from DB or API
+  const defaultTheme = {
+    primaryColor: "#4F8A10",
+    secondaryColor: "#F9F9F9",
+    logo: "/logo.svg",
+    favicon: "/favicon.ico",
+  };
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ClientRoot theme={defaultTheme}>{children}</ClientRoot>
       </body>
     </html>
   );
