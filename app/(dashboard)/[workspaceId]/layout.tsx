@@ -1,23 +1,49 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
-import { Sidebar } from "@/components/ui/dashboard/Sidebar";
-import ClientRoot from "@/components/ClientRoot";
+import { AppSidebar } from "@/components/ui/dashboard/Sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 async function getWorkspaceData(workspaceId: string, userEmail: string) {
-  const { data: userWorkspace } = await supabaseAdmin
+  // First get the user_workspace relationship
+  const { data: userWorkspace, error: uwError } = await supabaseAdmin
     .from("user_workspaces")
-    .select("role, users!inner(email), workspace:workspaces(*)")
+    .select("role, workspace_id")
     .eq("workspace_id", workspaceId)
-    .eq("users.email", userEmail)
+    .eq(
+      "user_id",
+      (
+        await supabaseAdmin
+          .from("users")
+          .select("id")
+          .eq("email", userEmail)
+          .single()
+      ).data?.id
+    )
     .single();
 
-  if (!userWorkspace) {
+  if (uwError || !userWorkspace) {
+    console.error("User workspace error:", uwError);
     return null;
   }
 
+  // Then get the full workspace data separately
+  const { data: workspace, error: wsError } = await supabaseAdmin
+    .from("workspaces")
+    .select("*")
+    .eq("id", workspaceId)
+    .single();
+
+  if (wsError || !workspace) {
+    console.error("Workspace error:", wsError);
+    return null;
+  }
+
+  console.log("Workspace data:", workspace);
+  console.log("Theme config:", workspace.theme_config);
+
   return {
-    workspace: userWorkspace.workspace,
+    workspace,
     role: userWorkspace.role,
   };
 }
@@ -80,27 +106,33 @@ export default async function WorkspaceLayout({
     item.roles.includes(data.role)
   );
 
-  // Extract workspace theme config and provide sensible defaults
-  const theme = (data.workspace as any)?.theme_config ?? {
-    primaryColor: "#2563eb",
-    secondaryColor: "#06b6d4",
-    logo: "",
-    favicon: "",
+  // Extract workspace theme config with proper typing
+  const themeConfig = data.workspace.theme_config;
+  const theme = {
+    primaryColor: themeConfig?.primaryColor || "#2563eb",
+    secondaryColor: themeConfig?.secondaryColor || "#06b6d4",
+    logo: themeConfig?.logo || data.workspace.logo_url || "",
+    favicon: themeConfig?.favicon || "",
   };
 
-  // Set CSS variables so components using var(--primary) etc. pick up the theme
-  const cssVars: React.CSSProperties = {
-    ["--primary" as any]: theme.primaryColor,
-    ["--secondary" as any]: theme.secondaryColor,
-  };
+  console.log("Applied theme:", theme);
 
   return (
-    <div className="flex h-screen" style={cssVars}>
-      {/* Wrap in ClientRoot (client-side ThemeProvider) so client components can use useTheme() */}
-      <ClientRoot theme={theme}>
-        <Sidebar user={user} navItems={filteredNavItems} />
-        <main className="flex-1 overflow-y-auto">{children}</main>
-      </ClientRoot>
-    </div>
+    <SidebarProvider>
+      <div className="flex w-full h-screen bg-gray-50/30">
+        <AppSidebar
+          user={user}
+          navItems={filteredNavItems}
+          primaryColor={theme.primaryColor}
+          logo={theme.logo}
+        />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-6">
+            <SidebarTrigger className="mb-4" />
+            {children}
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 }
