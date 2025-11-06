@@ -1,7 +1,14 @@
-@import "tailwindcss/preflight";
+@import "tailwindcss";
 @import "tw-animate-css";
-@import "tailwindcss/utilities";
 
+/* Tailwind v4 CSS-first tokens (add or expand as needed) */
+@theme {
+  /* Example tokens — extend as needed or remove if you manage tokens elsewhere */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial;
+  --color-primary-500: #2563eb;
+  --radius: 0.625rem;
+}
 /* CSS Variables for theming */
 :root {
   --radius: 0.625rem;

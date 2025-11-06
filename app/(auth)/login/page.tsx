@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 function LoginPageInner() {
   const handleLogin = (e: React.FormEvent) => {

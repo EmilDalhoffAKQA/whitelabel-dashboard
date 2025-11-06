@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
 import { Sidebar } from "@/components/ui/dashboard/Sidebar";
+import ClientRoot from "@/components/ClientRoot";
 
 async function getWorkspaceData(workspaceId: string, userEmail: string) {
   const { data: userWorkspace } = await supabaseAdmin
@@ -79,10 +80,27 @@ export default async function WorkspaceLayout({
     item.roles.includes(data.role)
   );
 
+  // Extract workspace theme config and provide sensible defaults
+  const theme = (data.workspace as any)?.theme_config ?? {
+    primaryColor: "#2563eb",
+    secondaryColor: "#06b6d4",
+    logo: "",
+    favicon: "",
+  };
+
+  // Set CSS variables so components using var(--primary) etc. pick up the theme
+  const cssVars: React.CSSProperties = {
+    ["--primary" as any]: theme.primaryColor,
+    ["--secondary" as any]: theme.secondaryColor,
+  };
+
   return (
-    <div className="flex h-screen">
-      <Sidebar user={user} navItems={filteredNavItems} />
-      <main className="flex-1 overflow-y-auto">{children}</main>
+    <div className="flex h-screen" style={cssVars}>
+      {/* Wrap in ClientRoot (client-side ThemeProvider) so client components can use useTheme() */}
+      <ClientRoot theme={theme}>
+        <Sidebar user={user} navItems={filteredNavItems} />
+        <main className="flex-1 overflow-y-auto">{children}</main>
+      </ClientRoot>
     </div>
   );
 }
