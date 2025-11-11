@@ -5,21 +5,24 @@ import { AppSidebar } from "@/components/ui/dashboard/Sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 async function getWorkspaceData(workspaceId: string, userEmail: string) {
-  // First get the user_workspace relationship
+  // First get the user
+  const { data: user, error: userError } = await supabaseAdmin
+    .from("users")
+    .select("id")
+    .eq("email", userEmail)
+    .single();
+
+  if (userError || !user) {
+    console.error("User fetch error:", userError);
+    return null;
+  }
+
+  // Then get the user_workspace relationship
   const { data: userWorkspace, error: uwError } = await supabaseAdmin
     .from("user_workspaces")
     .select("role, workspace_id")
     .eq("workspace_id", workspaceId)
-    .eq(
-      "user_id",
-      (
-        await supabaseAdmin
-          .from("users")
-          .select("id")
-          .eq("email", userEmail)
-          .single()
-      ).data?.id
-    )
+    .eq("user_id", user.id)
     .single();
 
   if (uwError || !userWorkspace) {

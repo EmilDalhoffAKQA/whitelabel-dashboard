@@ -18,8 +18,9 @@ interface OnboardingFormData {
   adminName: string;
   adminEmail: string;
   primaryColor: string;
-  secondaryColor: string;
-  logoUrl?: string;
+  secondaryColor: string; // Kept for API compatibility (mapped from pageBackgroundColor)
+  pageBackgroundColor: string;
+  logoUrl: string;
   markets: Array<{
     countryCode: string;
     name: string;
@@ -49,8 +50,10 @@ export default function OnboardingPage() {
     companyName: "",
     adminName: "",
     adminEmail: "",
-    primaryColor: "#2563eb",
-    secondaryColor: "#8b5cf6",
+    primaryColor: "#63513D",
+    secondaryColor: "#8b5cf6", // Default secondary color for API
+    pageBackgroundColor: "#F8F8F8",
+    logoUrl: "",
     markets: [],
   });
 
@@ -72,10 +75,16 @@ export default function OnboardingPage() {
     setError(null);
 
     try {
+      // Prepare data for API - ensure all required fields are present
+      const submitData = {
+        ...formData,
+        logoUrl: formData.logoUrl || undefined, // Convert empty string to undefined
+      };
+
       const response = await fetch("/api/workspace/onboard", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       if (!response.ok) {
@@ -96,11 +105,12 @@ export default function OnboardingPage() {
 
   const canProceedStep1 =
     formData.companyName && formData.adminName && formData.adminEmail;
+  const canProceedStep2 = formData.logoUrl && formData.primaryColor;
   const canProceedStep3 = formData.markets.length > 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-3xl">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-6xl border-gray-200">
         <CardHeader>
           <CardTitle className="text-3xl">Welcome to Your Dashboard</CardTitle>
           <CardDescription>
@@ -117,52 +127,68 @@ export default function OnboardingPage() {
 
           {/* Step 1: Company Info */}
           {step === 1 && (
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold">Company Information</h3>
-
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Company Name
-                </label>
-                <Input
-                  value={formData.companyName}
-                  onChange={(e) =>
-                    updateFormData("companyName", e.target.value)
-                  }
-                  placeholder="e.g., Nestlé Nordic"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Admin Name
-                </label>
-                <Input
-                  value={formData.adminName}
-                  onChange={(e) => updateFormData("adminName", e.target.value)}
-                  placeholder="Your full name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Admin Email
-                </label>
-                <Input
-                  type="email"
-                  value={formData.adminEmail}
-                  onChange={(e) => updateFormData("adminEmail", e.target.value)}
-                  placeholder="admin@company.com"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  You'll receive an invitation to set your password
+                <h3 className="text-2xl font-semibold mb-2">
+                  Company Information
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Let's start with your basic company details.
                 </p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2">
+                    Company Name
+                  </label>
+                  <Input
+                    value={formData.companyName}
+                    onChange={(e) =>
+                      updateFormData("companyName", e.target.value)
+                    }
+                    placeholder="e.g., Nestlé Nordic"
+                    className="border-gray-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-2">
+                    Admin Name
+                  </label>
+                  <Input
+                    value={formData.adminName}
+                    onChange={(e) =>
+                      updateFormData("adminName", e.target.value)
+                    }
+                    placeholder="Your full name"
+                    className="border-gray-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-2">
+                    Admin Email
+                  </label>
+                  <Input
+                    type="email"
+                    value={formData.adminEmail}
+                    onChange={(e) =>
+                      updateFormData("adminEmail", e.target.value)
+                    }
+                    placeholder="admin@company.com"
+                    className="border-gray-300"
+                  />
+                  <p className="text-xs text-gray-500 mt-2">
+                    You'll receive an invitation to set your password
+                  </p>
+                </div>
               </div>
 
               <Button
                 onClick={() => setStep(2)}
                 disabled={!canProceedStep1}
-                className="w-full"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Continue
               </Button>
@@ -171,119 +197,213 @@ export default function OnboardingPage() {
 
           {/* Step 2: Branding */}
           {step === 2 && (
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold">Customize Your Branding</h3>
-              <p className="text-sm text-gray-600">
-                Set your brand colors to personalize the dashboard experience
-              </p>
-
-              <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Primary Color
-                  </label>
-                  <div className="flex gap-2">
+                  <h3 className="text-2xl font-semibold mb-2">Branding</h3>
+                  <p className="text-sm text-gray-600">
+                    These are branding settings associated with your
+                    organization.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">
+                      Organization Logo
+                    </label>
+                    <div className="border-1 border-gray-200 rounded-lg p-6 text-center">
+                      {formData.logoUrl ? (
+                        <div className="space-y-3">
+                          <img
+                            src={formData.logoUrl}
+                            alt="Logo preview"
+                            className="max-h-24 mx-auto"
+                          />
+                          <div className="flex items-center gap-2 text-sm text-gray-600 justify-center">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                              />
+                            </svg>
+                            <span className="truncate max-w-xs">
+                              {formData.logoUrl}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-gray-400">No logo uploaded</div>
+                      )}
+                    </div>
                     <Input
-                      type="color"
-                      value={formData.primaryColor}
+                      type="url"
+                      value={formData.logoUrl}
                       onChange={(e) =>
-                        updateFormData("primaryColor", e.target.value)
+                        updateFormData("logoUrl", e.target.value)
                       }
-                      className="w-20 h-10"
+                      placeholder="https://example.com/logo.png"
+                      className="mt-2 border border-gray-300"
                     />
-                    <Input
-                      value={formData.primaryColor}
-                      onChange={(e) =>
-                        updateFormData("primaryColor", e.target.value)
-                      }
-                      placeholder="#2563eb"
-                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      If set, this is the logo that will be displayed to
+                      end-users for this organization in any interaction with
+                      them.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">
+                      Primary Color
+                    </label>
+                    <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-2 bg-white">
+                      <div
+                        className="w-10 h-10 rounded border border-gray-300"
+                        style={{ backgroundColor: formData.primaryColor }}
+                      />
+                      <Input
+                        value={formData.primaryColor}
+                        onChange={(e) =>
+                          updateFormData(
+                            "primaryColor",
+                            e.target.value.toUpperCase()
+                          )
+                        }
+                        placeholder="#63513D"
+                        className="!border-0 !shadow-none focus-visible:!ring-0 focus-visible:!ring-offset-0 uppercase"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      If set, this will be the primary color for CTAs that will
+                      be displayed to end-users for this organization in your
+                      application's authentication flows.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold mb-2 ">
+                      Page Background Color
+                    </label>
+                    <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-2 bg-white">
+                      <div
+                        className="w-10 h-10 rounded border border-gray-300"
+                        style={{
+                          backgroundColor: formData.pageBackgroundColor,
+                        }}
+                      />
+                      <Input
+                        value={formData.pageBackgroundColor}
+                        onChange={(e) =>
+                          updateFormData(
+                            "pageBackgroundColor",
+                            e.target.value.toUpperCase()
+                          )
+                        }
+                        placeholder="#F8F8F8"
+                        className="!border-0 !shadow-none focus-visible:!ring-0 focus-visible:!ring-offset-0 uppercase"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      If set, this will be the page background color that will
+                      be displayed to end-users for this organization in your
+                      application's authentication flows.
+                    </p>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Secondary Color
-                  </label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="color"
-                      value={formData.secondaryColor}
-                      onChange={(e) =>
-                        updateFormData("secondaryColor", e.target.value)
-                      }
-                      className="w-20 h-10"
-                    />
-                    <Input
-                      value={formData.secondaryColor}
-                      onChange={(e) =>
-                        updateFormData("secondaryColor", e.target.value)
-                      }
-                      placeholder="#8b5cf6"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Preview */}
-              <div
-                className="border rounded-lg p-6"
-                style={{ backgroundColor: formData.primaryColor + "10" }}
-              >
-                <h4
-                  className="font-semibold mb-4"
-                  style={{ color: formData.primaryColor }}
-                >
-                  Preview - {formData.companyName || "Your Company"}
-                </h4>
                 <div className="flex gap-2">
-                  <Button style={{ backgroundColor: formData.primaryColor }}>
-                    Primary Action
-                  </Button>
                   <Button
                     variant="outline"
-                    style={{
-                      borderColor: formData.secondaryColor,
-                      color: formData.secondaryColor,
-                    }}
+                    onClick={() => setStep(1)}
+                    className="flex-1"
                   >
-                    Secondary Action
+                    Back
+                  </Button>
+                  <Button
+                    onClick={() => setStep(3)}
+                    disabled={!canProceedStep2}
+                    className="flex-1 text-white"
+                    style={{ backgroundColor: formData.primaryColor }}
+                  >
+                    Continue
                   </Button>
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setStep(1)}
-                  className="flex-1"
-                >
-                  Back
-                </Button>
-                <Button onClick={() => setStep(3)} className="flex-1">
-                  Continue
-                </Button>
+              {/* Preview Panel */}
+              <div className="hidden lg:block">
+                <div className="sticky top-6">
+                  <div
+                    className="rounded-lg shadow-lg overflow-hidden"
+                    style={{ backgroundColor: formData.pageBackgroundColor }}
+                  >
+                    <div className="bg-white p-8 mx-8 mt-8 rounded-lg shadow-sm">
+                      {formData.logoUrl ? (
+                        <img
+                          src={formData.logoUrl}
+                          alt="Logo"
+                          className="h-12 mb-8 mx-auto"
+                        />
+                      ) : (
+                        <div className="h-12 mb-8 bg-gray-200 rounded w-32 mx-auto" />
+                      )}
+
+                      <div className="space-y-4">
+                        <div className="h-3 bg-gray-200 rounded w-3/4" />
+                        <div className="h-3 bg-gray-200 rounded w-full" />
+                        <div className="h-3 bg-gray-200 rounded w-5/6" />
+                      </div>
+
+                      <div className="mt-8">
+                        <div
+                          className="h-12 rounded-lg flex items-center justify-center text-white font-medium"
+                          style={{ backgroundColor: formData.primaryColor }}
+                        >
+                          Primary Button
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="text-center text-sm text-gray-600 py-6">
+                      Mock UI Preview
+                    </p>
+                    <p className="text-center text-xs text-gray-500 pb-6 px-4">
+                      For organization branding representation only,
+                      <br />
+                      any other customization will not be visible.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
           {/* Step 3: Markets */}
           {step === 3 && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <h3 className="text-xl font-semibold mb-2">
+                <h3 className="text-2xl font-semibold mb-2">
                   Select Your Markets
                 </h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-gray-600">
                   Choose which markets this workspace will support. You can add
                   more later.
                 </p>
+              </div>
 
+              <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
                   {AVAILABLE_MARKETS.map((market) => (
                     <label
                       key={market.countryCode}
-                      className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                      className={`flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer transition-colors ${
                         formData.markets.some(
                           (m) => m.countryCode === market.countryCode
                         )
@@ -330,7 +450,7 @@ export default function OnboardingPage() {
                 </Button>
                 <Button
                   onClick={handleSubmit}
-                  className="flex-1"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                   disabled={!canProceedStep3 || loading}
                 >
                   {loading ? "Creating..." : "Create Workspace"}
