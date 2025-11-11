@@ -52,7 +52,7 @@ export function AppSidebar({
   const pathname = usePathname();
 
   return (
-    <Sidebar className="border-none bg-transparent">
+    <Sidebar className="border-none bg-transparent [&_[data-slot=sidebar-inner]]:bg-transparent [&_[data-slot=sidebar-inner]]:border-none [&_[data-slot=sidebar-inner]]:shadow-none">
       {/* Floating container with shadow */}
       <div className="m-4 h-[calc(100vh-2rem)] bg-white rounded-2xl shadow-lg flex flex-col overflow-hidden">
         {/* Header / Logo */}
