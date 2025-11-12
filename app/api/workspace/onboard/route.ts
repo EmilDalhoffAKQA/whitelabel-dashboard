@@ -12,13 +12,8 @@ interface OnboardingRequest {
   adminName: string;
   adminEmail: string;
   primaryColor: string;
-  secondaryColor: string;
+  pageBackgroundColor: string;
   logoUrl?: string;
-  markets: Array<{
-    countryCode: string;
-    name: string;
-    languageCode: string;
-  }>;
 }
 
 // POST /api/workspace/onboard
@@ -34,10 +29,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!body.markets || body.markets.length === 0) {
+    // Ensure admin client is available
+    if (!supabaseAdmin) {
       return NextResponse.json(
-        { error: "At least one market must be selected" },
-        { status: 400 }
+        { error: "Server configuration error" },
+        { status: 500 }
       );
     }
 
@@ -49,7 +45,7 @@ export async function POST(req: NextRequest) {
         logo_url: body.logoUrl || null,
         theme_config: {
           primaryColor: body.primaryColor,
-          secondaryColor: body.secondaryColor,
+          pageBackgroundColor: body.pageBackgroundColor,
           logo: body.logoUrl || "",
           favicon: body.logoUrl || "",
         },
@@ -65,24 +61,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Step 2: Create markets for the workspace
-    const marketsToInsert = body.markets.map((market) => ({
-      workspace_id: workspace.id,
-      country_code: market.countryCode,
-      name: market.name,
-      language_code: market.languageCode,
-    }));
-
-    const { error: marketsError } = await supabaseAdmin
-      .from("markets")
-      .insert(marketsToInsert);
-
-    if (marketsError) {
-      console.error("Markets creation error:", marketsError);
-      // Continue anyway - markets can be added later
-    }
-
-    // Step 3: Create user in Auth0
+    // Step 2: Create user in Auth0
     let auth0User;
     let inviteLink = null;
 
@@ -131,7 +110,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Step 4: Create or update user in Supabase
+    // Step 3: Create or update user in Supabase
     let { data: user, error: userError } = await supabaseAdmin
       .from("users")
       .upsert({
@@ -161,7 +140,7 @@ export async function POST(req: NextRequest) {
       user = fetchedUser;
     }
 
-    // Step 5: Assign admin role to user in this workspace (use upsert to avoid duplicates)
+    // Step 4: Assign admin role to user in this workspace (use upsert to avoid duplicates)
     try {
       const { data: uwData, error: uwError } = await supabaseAdmin
         .from("user_workspaces")
@@ -190,7 +169,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Step 6: Send invitation email with password setup link
+    // Step 5: Send invitation email with password setup link
     if (inviteLink) {
       try {
         await sendInviteEmail({

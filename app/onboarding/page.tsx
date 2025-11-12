@@ -18,28 +18,9 @@ interface OnboardingFormData {
   adminName: string;
   adminEmail: string;
   primaryColor: string;
-  secondaryColor: string; // Kept for API compatibility (mapped from pageBackgroundColor)
   pageBackgroundColor: string;
   logoUrl: string;
-  markets: Array<{
-    countryCode: string;
-    name: string;
-    languageCode: string;
-  }>;
 }
-
-const AVAILABLE_MARKETS = [
-  { countryCode: "DK", name: "Denmark", languageCode: "da" },
-  { countryCode: "SE", name: "Sweden", languageCode: "sv" },
-  { countryCode: "NO", name: "Norway", languageCode: "no" },
-  { countryCode: "FI", name: "Finland", languageCode: "fi" },
-  { countryCode: "DE", name: "Germany", languageCode: "de" },
-  { countryCode: "FR", name: "France", languageCode: "fr" },
-  { countryCode: "ES", name: "Spain", languageCode: "es" },
-  { countryCode: "IT", name: "Italy", languageCode: "it" },
-  { countryCode: "GB", name: "United Kingdom", languageCode: "en" },
-  { countryCode: "NL", name: "Netherlands", languageCode: "nl" },
-];
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -51,23 +32,12 @@ export default function OnboardingPage() {
     adminName: "",
     adminEmail: "",
     primaryColor: "#63513D",
-    secondaryColor: "#8b5cf6", // Default secondary color for API
     pageBackgroundColor: "#F8F8F8",
     logoUrl: "",
-    markets: [],
   });
 
   const updateFormData = (field: keyof OnboardingFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const toggleMarket = (market: (typeof AVAILABLE_MARKETS)[0]) => {
-    setFormData((prev) => ({
-      ...prev,
-      markets: prev.markets.some((m) => m.countryCode === market.countryCode)
-        ? prev.markets.filter((m) => m.countryCode !== market.countryCode)
-        : [...prev.markets, market],
-    }));
   };
 
   const handleSubmit = async () => {
@@ -106,7 +76,6 @@ export default function OnboardingPage() {
   const canProceedStep1 =
     formData.companyName && formData.adminName && formData.adminEmail;
   const canProceedStep2 = formData.logoUrl && formData.primaryColor;
-  const canProceedStep3 = formData.markets.length > 0;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -114,7 +83,7 @@ export default function OnboardingPage() {
         <CardHeader>
           <CardTitle className="text-3xl">Welcome to Your Dashboard</CardTitle>
           <CardDescription>
-            Let's set up your workspace in just a few steps (Step {step} of 3)
+            Let's set up your workspace in just a few steps (Step {step} of 2)
           </CardDescription>
         </CardHeader>
 
@@ -323,16 +292,17 @@ export default function OnboardingPage() {
                     variant="outline"
                     onClick={() => setStep(1)}
                     className="flex-1"
+                    disabled={loading}
                   >
                     Back
                   </Button>
                   <Button
-                    onClick={() => setStep(3)}
-                    disabled={!canProceedStep2}
+                    onClick={handleSubmit}
                     className="flex-1 text-white"
                     style={{ backgroundColor: formData.primaryColor }}
+                    disabled={!canProceedStep2 || loading}
                   >
-                    Continue
+                    {loading ? "Creating..." : "Create Workspace"}
                   </Button>
                 </div>
               </div>
@@ -381,80 +351,6 @@ export default function OnboardingPage() {
                     </p>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Markets */}
-          {step === 3 && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-2xl font-semibold mb-2">
-                  Select Your Markets
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Choose which markets this workspace will support. You can add
-                  more later.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
-                  {AVAILABLE_MARKETS.map((market) => (
-                    <label
-                      key={market.countryCode}
-                      className={`flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer transition-colors ${
-                        formData.markets.some(
-                          (m) => m.countryCode === market.countryCode
-                        )
-                          ? "bg-blue-50 border-blue-300"
-                          : "hover:bg-gray-50"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.markets.some(
-                          (m) => m.countryCode === market.countryCode
-                        )}
-                        onChange={() => toggleMarket(market)}
-                        className="w-4 h-4"
-                      />
-                      <div>
-                        <div className="font-medium">{market.name}</div>
-                        <div className="text-xs text-gray-500">
-                          {market.countryCode} • {market.languageCode}
-                        </div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-
-                {formData.markets.length > 0 && (
-                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-sm text-green-800">
-                      ✓ {formData.markets.length} market
-                      {formData.markets.length !== 1 ? "s" : ""} selected
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setStep(2)}
-                  className="flex-1"
-                  disabled={loading}
-                >
-                  Back
-                </Button>
-                <Button
-                  onClick={handleSubmit}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                  disabled={!canProceedStep3 || loading}
-                >
-                  {loading ? "Creating..." : "Create Workspace"}
-                </Button>
               </div>
             </div>
           )}

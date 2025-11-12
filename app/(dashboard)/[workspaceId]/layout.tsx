@@ -2,9 +2,14 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
 import { AppSidebar } from "@/components/ui/dashboard/Sidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 async function getWorkspaceData(workspaceId: string, userEmail: string) {
+  // Ensure we're on server-side with admin access
+  if (!supabaseAdmin) {
+    console.error("Supabase admin client not available");
+    return null;
+  }
+
   // First get the user
   const { data: user, error: userError } = await supabaseAdmin
     .from("users")
@@ -61,6 +66,7 @@ export default async function WorkspaceLayout({
   const { workspaceId } = await params;
   const cookieStore = await cookies();
   const userInfoCookie = cookieStore.get("user_info");
+  const sidebarStateCookie = cookieStore.get("sidebar_state");
 
   if (!userInfoCookie) {
     redirect("/login");
@@ -72,6 +78,11 @@ export default async function WorkspaceLayout({
   if (!data) {
     redirect("/workspaces");
   }
+
+  // Read sidebar state from cookie (default to false if not set)
+  const sidebarOpen = sidebarStateCookie
+    ? sidebarStateCookie.value === "true"
+    : false;
 
   // Build user and navItems for Sidebar
   const user = {
@@ -87,21 +98,15 @@ export default async function WorkspaceLayout({
       roles: ["admin", "editor"],
     },
     {
-      href: `/${workspaceId}/markets`,
-      label: "Markets",
-      roles: ["admin", "editor"],
-    },
-    {
-      href: `/${workspaceId}/settings/admin`,
+      href: `/${workspaceId}/users`,
       label: "Users",
       roles: ["admin"],
     },
     {
-      href: `/${workspaceId}/settings/admin/invite-user`,
-      label: "Invite User",
+      href: `/${workspaceId}/settings`,
+      label: "Settings",
       roles: ["admin"],
     },
-    { href: `/${workspaceId}/settings`, label: "Settings", roles: ["admin"] },
   ];
 
   // Only show nav items allowed for the user's role
@@ -113,7 +118,7 @@ export default async function WorkspaceLayout({
   const themeConfig = data.workspace.theme_config;
   const theme = {
     primaryColor: themeConfig?.primaryColor || "#2563eb",
-    secondaryColor: themeConfig?.secondaryColor || "#06b6d4",
+    pageBackgroundColor: themeConfig?.pageBackgroundColor || "#F9FAFB",
     logo: themeConfig?.logo || data.workspace.logo_url || "",
     favicon: themeConfig?.favicon || "",
   };
@@ -121,21 +126,17 @@ export default async function WorkspaceLayout({
   console.log("Applied theme:", theme);
 
   return (
-    <SidebarProvider>
-      <div className="flex w-full h-screen bg-gray-50/30">
-        <AppSidebar
-          user={user}
-          navItems={filteredNavItems}
-          primaryColor={theme.primaryColor}
-          logo={theme.logo}
-        />
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-6">
-            <SidebarTrigger className="mb-4" />
-            {children}
-          </div>
-        </main>
-      </div>
-    </SidebarProvider>
+    <div
+      className="flex w-full h-screen gap-4 p-4"
+      style={{ backgroundColor: theme.pageBackgroundColor }}
+    >
+      <AppSidebar
+        user={user}
+        navItems={filteredNavItems}
+        primaryColor={theme.primaryColor}
+        logo={theme.logo}
+      />
+      <main className="flex-1 overflow-y-auto">{children}</main>
+    </div>
   );
 }
