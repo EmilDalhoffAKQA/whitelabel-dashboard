@@ -3,21 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-
-interface Workspace {
-  id: number;
-  name: string;
-  logo_url: string | null;
-  theme_config: {
-    primaryColor: string;
-    secondaryColor: string;
-    logo: string;
-    favicon: string;
-  } | null;
-}
+import { Workspace, WidgetType } from "@/lib/types";
+import { Card, CardContent } from "@/components/ui/card";
+import { getWidgetComponent } from "@/components/widgets";
 
 export default function DashboardPage() {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [widgets, setWidgets] = useState<WidgetType[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const params = useParams();
@@ -43,6 +35,20 @@ export default function DashboardPage() {
       }
 
       setWorkspace(workspaceData);
+
+      // Fetch widgets for this workspace
+      const { data: widgetsData, error: widgetsError } = await supabase
+        .from("widget_types")
+        .select("*")
+        .eq("workspace_id", workspaceId)
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+
+      if (widgetsError) {
+        console.error("Widgets error:", widgetsError);
+      } else {
+        setWidgets(widgetsData || []);
+      }
     } catch (error) {
       console.error("Error loading dashboard:", error);
       router.push("/workspaces");
@@ -92,12 +98,52 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Widget Grid - Ready for modular cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Widgets will be added here */}
-        <div className="col-span-full text-center py-12 text-gray-500">
-          Dashboard widgets coming soon...
-        </div>
+      {/* Widget Grid - Uses width and height from database */}
+      <div 
+        className="grid grid-cols-12 gap-4" 
+        style={{ 
+          gridAutoFlow: 'dense',
+          gridAutoRows: 'minmax(150px, auto)' // Min 150px but can grow to fit content
+        }}
+      >
+        {widgets.length === 0 ? (
+          <div className="col-span-12 text-center py-12">
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-gray-500">
+                  No widgets configured for this workspace.
+                </p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Add widgets to the database to see them here.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          widgets.map((widget) => {
+            const WidgetComponent = getWidgetComponent(widget.component_name);
+
+            if (!WidgetComponent) {
+              console.warn(
+                `Widget component not found: ${widget.component_name}`
+              );
+              return null;
+            }
+
+            return (
+              <div
+                key={widget.id}
+                className="h-full"
+                style={{
+                  gridColumn: `span ${widget.width} / span ${widget.width}`,
+                  gridRow: `span ${widget.height} / span ${widget.height}`,
+                }}
+              >
+                <WidgetComponent />
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
