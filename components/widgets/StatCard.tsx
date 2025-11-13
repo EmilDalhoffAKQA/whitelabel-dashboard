@@ -12,6 +12,7 @@ interface StatCardProps {
   };
   description?: string;
   icon?: React.ReactNode;
+  primaryColor?: string;
 }
 
 export function StatCard({
@@ -20,6 +21,7 @@ export function StatCard({
   trend,
   description,
   icon,
+  primaryColor = "#3b82f6",
 }: StatCardProps) {
   return (
     <Card className="h-full !py-6 !gap-4">
@@ -44,7 +46,9 @@ export function StatCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-2xl font-bold" style={{ color: primaryColor }}>
+          {value}
+        </div>
         <div className="h-[16px] flex items-end">
           {description && (
             <p className="text-xs text-muted-foreground leading-none">

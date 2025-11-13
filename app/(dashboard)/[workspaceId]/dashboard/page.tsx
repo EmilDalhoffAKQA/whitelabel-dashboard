@@ -99,11 +99,11 @@ export default function DashboardPage() {
       </div>
 
       {/* Widget Grid - Uses width and height from database */}
-      <div 
-        className="grid grid-cols-12 gap-4" 
-        style={{ 
-          gridAutoFlow: 'dense',
-          gridAutoRows: 'minmax(150px, auto)' // Min 150px but can grow to fit content
+      <div
+        className="grid grid-cols-12 gap-4"
+        style={{
+          gridAutoFlow: "dense",
+          gridAutoRows: "180px", // Base unit: small widget height
         }}
       >
         {widgets.length === 0 ? (
@@ -130,6 +130,10 @@ export default function DashboardPage() {
               return null;
             }
 
+            // Get primary color from workspace theme
+            const primaryColor =
+              workspace?.theme_config?.primaryColor || "#3b82f6";
+
             return (
               <div
                 key={widget.id}
@@ -139,7 +143,7 @@ export default function DashboardPage() {
                   gridRow: `span ${widget.height} / span ${widget.height}`,
                 }}
               >
-                <WidgetComponent />
+                <WidgetComponent primaryColor={primaryColor} {...({} as any)} />
               </div>
             );
           })

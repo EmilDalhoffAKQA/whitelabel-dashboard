@@ -10,7 +10,13 @@ import {
   YAxis,
 } from "recharts";
 
-export function ConversationVolumeWidget() {
+interface ConversationVolumeWidgetProps {
+  primaryColor?: string;
+}
+
+export function ConversationVolumeWidget({
+  primaryColor = "#3b82f6",
+}: ConversationVolumeWidgetProps) {
   // Generate mock data for the last 7 days
   const generateMockData = () => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -23,15 +29,15 @@ export function ConversationVolumeWidget() {
   const data = generateMockData();
 
   return (
-    <Card className="h-full">
-      <CardHeader>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="flex-shrink-0">
         <CardTitle className="text-base font-medium">
           Conversation Volume
         </CardTitle>
         <p className="text-xs text-muted-foreground">Last 7 days</p>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+      <CardContent className="flex-1 min-h-0">
+        <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
             <defs>
               <linearGradient
@@ -41,8 +47,8 @@ export function ConversationVolumeWidget() {
                 x2="0"
                 y2="1"
               >
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                <stop offset="5%" stopColor={primaryColor} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={primaryColor} stopOpacity={0} />
               </linearGradient>
             </defs>
             <XAxis
@@ -83,7 +89,7 @@ export function ConversationVolumeWidget() {
             <Area
               type="monotone"
               dataKey="conversations"
-              stroke="#3b82f6"
+              stroke={primaryColor}
               strokeWidth={2}
               fillOpacity={1}
               fill="url(#colorConversations)"

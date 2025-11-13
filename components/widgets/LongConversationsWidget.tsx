@@ -1,20 +1,27 @@
 "use client";
 
 import { StatCard } from "./StatCard";
-import { MessagesSquare } from "lucide-react";
 
-export function LongConversationsWidget() {
-  // Mock data - samtaler med 5+ beskeder
+interface LongConversationsWidgetProps {
+  primaryColor?: string;
+}
+
+export function LongConversationsWidget({ primaryColor }: LongConversationsWidgetProps) {
   const mockData = {
-    total: Math.floor(Math.random() * 800) + 200,
-    percentage: Math.floor(Math.random() * 30) + 15,
+    total: Math.floor(Math.random() * 500) + 100,
+    trend: Math.floor(Math.random() * 20) - 5,
   };
 
   return (
     <StatCard
       title="Conversations with 5+ Messages"
-      value={mockData.total.toLocaleString()}
+      value={mockData.total}
+      trend={{
+        value: Math.abs(mockData.trend),
+        isPositive: mockData.trend > 0,
+      }}
       description="Deep engagement conversations"
+      primaryColor={primaryColor}
     />
   );
 }

@@ -1,30 +1,33 @@
 "use client";
 
 import { StatCard } from "./StatCard";
-import { Star } from "lucide-react";
 
-export function NPSScoreWidget() {
-  // Mock NPS score (between -100 and 100)
-  const npsScore = Math.floor(Math.random() * 80) + 20; // 20-100 for demo
-  const trend = {
-    value: Math.floor(Math.random() * 10) + 1,
-    isPositive: Math.random() > 0.5,
+interface NPSScoreWidgetProps {
+  primaryColor?: string;
+}
+
+export function NPSScoreWidget({ primaryColor }: NPSScoreWidgetProps) {
+  const mockData = {
+    score: Math.floor(Math.random() * 50) + 50,
+    trend: Math.floor(Math.random() * 15) - 5,
   };
 
-  // NPS kategorier
-  const getNPSCategory = (score: number) => {
-    if (score >= 70) return "Excellent";
-    if (score >= 50) return "Great";
-    if (score >= 30) return "Good";
-    return "Needs Improvement";
+  const getDescription = (score: number) => {
+    if (score >= 70) return "Excellent customer satisfaction";
+    if (score >= 50) return "Good customer satisfaction";
+    return "Needs improvement customer satisfaction";
   };
 
   return (
     <StatCard
       title="NPS Score"
-      value={npsScore}
-      trend={trend}
-      description={`${getNPSCategory(npsScore)} customer satisfaction`}
+      value={mockData.score}
+      trend={{
+        value: Math.abs(mockData.trend),
+        isPositive: mockData.trend > 0,
+      }}
+      description={getDescription(mockData.score)}
+      primaryColor={primaryColor}
     />
   );
 }
