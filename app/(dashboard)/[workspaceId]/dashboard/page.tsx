@@ -37,10 +37,11 @@ export default function DashboardPage() {
       setWorkspace(workspaceData);
 
       // Fetch widgets for this workspace
+      // Get both global widgets (workspace_id IS NULL) and workspace-specific widgets
       const { data: widgetsData, error: widgetsError } = await supabase
         .from("widget_types")
         .select("*")
-        .eq("workspace_id", workspaceId)
+        .or(`workspace_id.is.null,workspace_id.eq.${workspaceId}`)
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
 
@@ -57,10 +58,15 @@ export default function DashboardPage() {
     }
   };
 
+  const primaryColor = workspace?.theme_config?.primaryColor || "#3b82f6";
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div
+          className="animate-spin rounded-full h-12 w-12 border-b-2"
+          style={{ borderBottomColor: primaryColor }}
+        ></div>
       </div>
     );
   }

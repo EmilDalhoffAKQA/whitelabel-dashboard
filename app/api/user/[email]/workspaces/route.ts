@@ -14,6 +14,13 @@ export async function GET(
   }
 
   // Find user by email
+  if (!supabaseAdmin) {
+    return NextResponse.json(
+      { error: "Supabase client not initialized" },
+      { status: 500 }
+    );
+  }
+
   const { data: user, error: userError } = await supabaseAdmin
     .from("users")
     .select("id")

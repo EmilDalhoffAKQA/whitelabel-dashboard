@@ -59,11 +59,15 @@ export function RecentConversationsWidget() {
         </p>
       </CardHeader>
       <CardContent className="flex-1 overflow-auto">
-        <div className="space-y-3">
-          {conversations.map((conv) => (
+        <div className="space-y-0">
+          {conversations.map((conv, index) => (
             <div
               key={conv.id}
-              className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+              className={`flex items-center justify-between p-4 hover:bg-accent/30 transition-colors ${
+                index !== conversations.length - 1
+                  ? "border-b border-gray-100"
+                  : ""
+              }`}
             >
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm truncate">{conv.customer}</p>

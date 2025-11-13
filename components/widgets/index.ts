@@ -11,6 +11,8 @@ import { PeakHoursWidget } from "./PeakHoursWidget";
 import { ChannelDistributionWidget } from "./ChannelDistributionWidget";
 import { RecentConversationsWidget } from "./RecentConversationsWidget";
 import { AgentPerformanceWidget } from "./AgentPerformanceWidget";
+import { SatisfactionTrendWidget } from "./SatisfactionTrendWidget";
+import { ResponseTimeTrendWidget } from "./ResponseTimeTrendWidget";
 
 export const widgetRegistry: Record<string, React.ComponentType> = {
   TotalConversationsWidget,
@@ -25,6 +27,8 @@ export const widgetRegistry: Record<string, React.ComponentType> = {
   ChannelDistributionWidget,
   RecentConversationsWidget,
   AgentPerformanceWidget,
+  SatisfactionTrendWidget,
+  ResponseTimeTrendWidget,
 };
 
 export function getWidgetComponent(

@@ -38,20 +38,8 @@ export interface WidgetType {
   category: string;
   component_name: string;
   workspace_id: number | null;
-  dashboard_layout_id: string | null;
-  position_x: number;
-  position_y: number;
   width: number;
   height: number;
   sort_order: number;
   is_active: boolean;
-}
-
-export interface DashboardLayout {
-  id: string;
-  workspace_id: number;
-  name: string;
-  is_default: boolean;
-  is_template: boolean;
-  layout_config: Record<string, any> | null;
 }

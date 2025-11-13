@@ -169,6 +169,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Note: Widgets are now global (workspace_id = NULL) and shared across all workspaces
+    // No need to copy widgets per workspace anymore
+
     // Step 5: Send invitation email with password setup link
     if (inviteLink) {
       try {

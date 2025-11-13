@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { usePathname } from "next/navigation";
-import { Home, Users, Settings } from "lucide-react";
+import { Home, Users, Paintbrush, Settings } from "lucide-react";
 
 type NavItem = {
   href: string;
@@ -23,7 +23,7 @@ type AppSidebarProps = {
 const iconMap: Record<string, any> = {
   Dashboard: Home,
   Users: Users,
-  Settings: Settings,
+  Settings: Paintbrush, // Theme settings with brush icon
 };
 
 export function AppSidebar({
@@ -77,14 +77,17 @@ export function AppSidebar({
         </div>
       </div>
 
-      {/* Footer - Settings and Logout at bottom */}
+      {/* Footer - Dashboard Settings and Logout at bottom */}
       <div className="space-y-3 flex flex-col items-center">
-        {/* Settings button */}
+        {/* Dashboard/Widget Settings button */}
         <button
           onClick={() =>
-            (window.location.href = `/${pathname.split("/")[1]}/settings`)
+            (window.location.href = `/${
+              pathname.split("/")[1]
+            }/dashboard-settings`)
           }
           className="w-10 h-10 rounded-2xl flex items-center justify-center text-gray-600 bg-transparent hover:bg-gray-100/50 transition-colors"
+          title="Dashboard Settings"
         >
           <Settings className="w-5 h-5" strokeWidth={2} />
         </button>

@@ -49,18 +49,33 @@ export function AgentPerformanceWidget() {
       <CardContent className="flex-1 overflow-auto">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b">
-              <tr className="text-left">
-                <th className="pb-2 font-medium">Agent</th>
-                <th className="pb-2 font-medium text-right">Conversations</th>
-                <th className="pb-2 font-medium text-right">CSAT</th>
-                <th className="pb-2 font-medium text-right">Avg Time</th>
+            <thead>
+              <tr className="text-left border-b border-gray-100">
+                <th className="pb-3 font-medium text-muted-foreground">
+                  Agent
+                </th>
+                <th className="pb-3 font-medium text-right text-muted-foreground">
+                  Conversations
+                </th>
+                <th className="pb-3 font-medium text-right text-muted-foreground">
+                  CSAT
+                </th>
+                <th className="pb-3 font-medium text-right text-muted-foreground">
+                  Avg Time
+                </th>
               </tr>
             </thead>
             <tbody>
               {agents.map((agent, index) => (
-                <tr key={index} className="border-b last:border-0">
-                  <td className="py-3">
+                <tr
+                  key={index}
+                  className={`hover:bg-accent/30 transition-colors ${
+                    index !== agents.length - 1
+                      ? "border-b border-gray-100"
+                      : ""
+                  }`}
+                >
+                  <td className="py-4">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
                         {agent.name
