@@ -123,6 +123,13 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Upsert user in Supabase
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        { error: "Supabase admin client not initialized" },
+        { status: 500 }
+      );
+    }
+
     let dbUser, userError;
     try {
       const upsertResult = await supabaseAdmin
