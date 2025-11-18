@@ -11,12 +11,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  LayoutGrid, 
-  TrendingUp, 
-  Clock, 
-  Users, 
-  MessageSquare, 
+import {
+  LayoutGrid,
+  TrendingUp,
+  Clock,
+  Users,
+  MessageSquare,
   Star,
   BarChart3,
   PieChart,
@@ -25,7 +25,7 @@ import {
   ThumbsUp,
   CheckCircle2,
   Zap,
-  Plus
+  Plus,
 } from "lucide-react";
 import { Workspace } from "@/lib/types";
 
@@ -47,76 +47,82 @@ interface WorkspaceWidget {
 }
 
 // Widget metadata with descriptions
-const widgetDescriptions: Record<string, { description: string; icon: any; useCase: string }> = {
-  "TotalConversationsWidget": {
+const widgetDescriptions: Record<
+  string,
+  { description: string; icon: any; useCase: string }
+> = {
+  TotalConversationsWidget: {
     description: "Track the total number of customer conversations over time",
     icon: MessageSquare,
-    useCase: "Monitor overall chat volume and identify busy periods"
+    useCase: "Monitor overall chat volume and identify busy periods",
   },
-  "ActiveUsersTodayWidget": {
+  ActiveUsersTodayWidget: {
     description: "See how many users are currently active on your platform",
     icon: Users,
-    useCase: "Real-time monitoring of concurrent user activity"
+    useCase: "Real-time monitoring of concurrent user activity",
   },
-  "AverageResponseTimeWidget": {
-    description: "Monitor your team's average response time to customer messages",
+  AverageResponseTimeWidget: {
+    description:
+      "Monitor your team's average response time to customer messages",
     icon: Clock,
-    useCase: "Ensure quick responses and improve customer satisfaction"
+    useCase: "Ensure quick responses and improve customer satisfaction",
   },
-  "ResolutionRateWidget": {
+  ResolutionRateWidget: {
     description: "Percentage of conversations successfully resolved",
     icon: CheckCircle2,
-    useCase: "Track team effectiveness in solving customer issues"
+    useCase: "Track team effectiveness in solving customer issues",
   },
-  "NPSScoreWidget": {
-    description: "Net Promoter Score - measure customer loyalty and satisfaction",
+  NPSScoreWidget: {
+    description:
+      "Net Promoter Score - measure customer loyalty and satisfaction",
     icon: Star,
-    useCase: "Gauge overall customer sentiment and brand advocacy"
+    useCase: "Gauge overall customer sentiment and brand advocacy",
   },
-  "CustomerSentimentWidget": {
+  CustomerSentimentWidget: {
     description: "Analyze customer emotions across all conversations",
     icon: ThumbsUp,
-    useCase: "Identify trends in customer satisfaction and pain points"
+    useCase: "Identify trends in customer satisfaction and pain points",
   },
-  "ConversationVolumeWidget": {
+  ConversationVolumeWidget: {
     description: "Visual timeline of conversation volume over the last 7 days",
     icon: TrendingUp,
-    useCase: "Spot trends and plan resource allocation"
+    useCase: "Spot trends and plan resource allocation",
   },
-  "ResponseTimeTrendWidget": {
+  ResponseTimeTrendWidget: {
     description: "Track how response times change over time",
     icon: Activity,
-    useCase: "Monitor service quality improvements or degradation"
+    useCase: "Monitor service quality improvements or degradation",
   },
-  "SatisfactionTrendWidget": {
+  SatisfactionTrendWidget: {
     description: "Customer satisfaction scores tracked over time",
     icon: BarChart3,
-    useCase: "Measure the impact of service improvements"
+    useCase: "Measure the impact of service improvements",
   },
-  "ChannelDistributionWidget": {
-    description: "See which channels customers prefer (chat, email, phone, etc.)",
+  ChannelDistributionWidget: {
+    description:
+      "See which channels customers prefer (chat, email, phone, etc.)",
     icon: PieChart,
-    useCase: "Allocate resources to the right communication channels"
+    useCase: "Allocate resources to the right communication channels",
   },
-  "AgentPerformanceWidget": {
+  AgentPerformanceWidget: {
     description: "Compare individual agent metrics and performance",
     icon: Target,
-    useCase: "Identify top performers and coaching opportunities"
+    useCase: "Identify top performers and coaching opportunities",
   },
-  "PeakHoursWidget": {
+  PeakHoursWidget: {
     description: "Identify the busiest hours for customer support",
     icon: Zap,
-    useCase: "Optimize staffing schedules based on demand"
+    useCase: "Optimize staffing schedules based on demand",
   },
-  "LongConversationsWidget": {
+  LongConversationsWidget: {
     description: "Track conversations exceeding 5+ messages",
     icon: MessageSquare,
-    useCase: "Identify complex issues requiring special attention"
+    useCase: "Identify complex issues requiring special attention",
   },
-  "RecentConversationsWidget": {
+  RecentConversationsWidget: {
     description: "Browse the most recent customer interactions",
     icon: LayoutGrid,
-    useCase: "Quick access to ongoing conversations"
+    useCase: "Quick access to ongoing conversations",
   },
 };
 
@@ -134,7 +140,9 @@ const getSizeColor = (width: number): string => {
 
 export default function DashboardSettingsPage() {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
-  const [workspaceWidgets, setWorkspaceWidgets] = useState<WorkspaceWidget[]>([]);
+  const [workspaceWidgets, setWorkspaceWidgets] = useState<WorkspaceWidget[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const params = useParams();
@@ -163,7 +171,8 @@ export default function DashboardSettingsPage() {
       // Fetch workspace widgets with their types
       const { data: widgetsData, error: widgetsError } = await supabase
         .from("workspace_widget_layouts")
-        .select(`
+        .select(
+          `
           id,
           widget_type_id,
           is_visible,
@@ -175,7 +184,8 @@ export default function DashboardSettingsPage() {
             width,
             height
           )
-        `)
+        `
+        )
         .eq("workspace_id", workspaceId)
         .order("widget_type(display_name)", { ascending: true });
 
@@ -236,11 +246,11 @@ export default function DashboardSettingsPage() {
                   {workspaceWidgets.length}
                 </p>
               </div>
-              <div 
+              <div
                 className="p-3 rounded-lg"
-                style={{ 
+                style={{
                   backgroundColor: `${primaryColor}10`,
-                  color: primaryColor 
+                  color: primaryColor,
                 }}
               >
                 <LayoutGrid className="h-6 w-6" />
@@ -256,15 +266,18 @@ export default function DashboardSettingsPage() {
                 <p className="text-sm font-medium text-gray-600 mb-1">
                   Currently Active
                 </p>
-                <p className="text-3xl font-bold" style={{ color: primaryColor }}>
+                <p
+                  className="text-3xl font-bold"
+                  style={{ color: primaryColor }}
+                >
                   {workspaceWidgets.filter((w) => w.is_visible).length}
                 </p>
               </div>
-              <div 
+              <div
                 className="p-3 rounded-lg"
-                style={{ 
+                style={{
                   backgroundColor: `${primaryColor}10`,
-                  color: primaryColor 
+                  color: primaryColor,
                 }}
               >
                 <CheckCircle2 className="h-6 w-6" />
@@ -301,7 +314,7 @@ export default function DashboardSettingsPage() {
           const metadata = widgetDescriptions[widgetType.component_name] || {
             description: "Analytics widget for monitoring key metrics",
             icon: BarChart3,
-            useCase: "Track important business metrics"
+            useCase: "Track important business metrics",
           };
 
           const IconComponent = metadata.icon;
@@ -309,52 +322,61 @@ export default function DashboardSettingsPage() {
           const sizeColor = getSizeColor(widgetType.width);
 
           return (
-            <Card 
-              key={widget.id} 
+            <Card
+              key={widget.id}
               className={`relative transition-all hover:shadow-md ${
-                widget.is_visible 
-                  ? "border-gray-200" 
+                widget.is_visible
+                  ? "border-gray-200"
                   : "border-gray-100 bg-gray-50/50"
               }`}
             >
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between mb-3">
-                  <div 
+                  <div
                     className="p-2.5 rounded-lg"
-                    style={{ 
+                    style={{
                       backgroundColor: `${primaryColor}10`,
-                      color: primaryColor 
+                      color: primaryColor,
                     }}
                   >
                     <IconComponent className="h-5 w-5" />
                   </div>
                   {widget.is_visible ? (
-                    <Badge 
+                    <Badge
                       className="text-xs font-medium"
                       style={{
                         backgroundColor: `${primaryColor}15`,
                         color: primaryColor,
-                        border: `1px solid ${primaryColor}30`
+                        border: `1px solid ${primaryColor}30`,
                       }}
                     >
                       Active
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="text-xs font-medium text-gray-500 border-gray-200">
+                    <Badge
+                      variant="outline"
+                      className="text-xs font-medium text-gray-500 border-gray-200"
+                    >
                       Available
                     </Badge>
                   )}
                 </div>
-                
+
                 <CardTitle className="text-base font-semibold text-gray-900 mb-2">
                   {widgetType.display_name}
                 </CardTitle>
-                
+
                 <div className="flex gap-2">
-                  <Badge variant="secondary" className={`text-xs ${sizeColor} border-0`}>
+                  <Badge
+                    variant="secondary"
+                    className={`text-xs ${sizeColor} border-0`}
+                  >
                     {sizeLabel}
                   </Badge>
-                  <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600 border-0">
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-gray-100 text-gray-600 border-0"
+                  >
                     {widgetType.category}
                   </Badge>
                 </div>
@@ -366,9 +388,7 @@ export default function DashboardSettingsPage() {
                 </p>
 
                 <div className="pt-3 border-t border-gray-100">
-                  <p className="text-xs text-gray-500">
-                    {metadata.useCase}
-                  </p>
+                  <p className="text-xs text-gray-500">{metadata.useCase}</p>
                 </div>
               </CardContent>
             </Card>
@@ -380,11 +400,11 @@ export default function DashboardSettingsPage() {
       <Card className="border-gray-200">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <div 
+            <div
               className="p-2 rounded-lg"
-              style={{ 
+              style={{
                 backgroundColor: `${primaryColor}10`,
-                color: primaryColor 
+                color: primaryColor,
               }}
             >
               <LayoutGrid className="h-4 w-4" />
@@ -396,7 +416,10 @@ export default function DashboardSettingsPage() {
           <div className="grid sm:grid-cols-2 gap-4 text-sm text-gray-600">
             <div>
               <p className="font-medium text-gray-900 mb-1">Adding Widgets</p>
-              <p>Click "Edit Layout" on the dashboard, then select from the "+ Add Widget" menu</p>
+              <p>
+                Click "Edit Layout" on the dashboard, then select from the "+
+                Add Widget" menu
+              </p>
             </div>
             <div>
               <p className="font-medium text-gray-900 mb-1">Removing Widgets</p>
