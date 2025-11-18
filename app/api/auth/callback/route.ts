@@ -90,7 +90,12 @@ export async function GET(req: NextRequest) {
 }
 
 async function syncUserToSupabase(auth0User: any) {
-  const { data: user, error: userError } = await supabaseAdmin
+  const client = supabaseAdmin;
+  if (!client) {
+    throw new Error("Supabase admin client is not initialized");
+  }
+
+  const { data: user, error: userError } = await client
     .from("users")
     .upsert(
       {

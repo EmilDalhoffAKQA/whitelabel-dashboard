@@ -7,6 +7,11 @@ export async function POST(req: NextRequest) {
 
     const { workspaceId, layouts } = body;
 
+    console.log("Received save request:", {
+      workspaceId,
+      layoutCount: layouts?.length,
+    });
+
     if (!workspaceId || !layouts) {
       return NextResponse.json(
         { error: "Missing workspaceId or layouts" },
@@ -15,8 +20,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Update each widget layout
-    const updates = layouts.map((layout: any) =>
-      supabase
+    const updatePromises = layouts.map(async (layout: any) => {
+      const { data, error } = await supabase
         .from("workspace_widget_layouts")
         .update({
           x_position: layout.x_position,
@@ -27,11 +32,30 @@ export async function POST(req: NextRequest) {
         })
         .eq("id", layout.id)
         .eq("workspace_id", workspaceId)
-    );
+        .select();
 
-    await Promise.all(updates);
+      if (error) {
+        console.error(` Error updating widget ${layout.id}:`, error);
+      } else {
+        console.log(`Updated widget ${layout.id}:`, data);
+      }
 
-    return NextResponse.json({ success: true });
+      return { data, error };
+    });
+
+    const results = await Promise.all(updatePromises);
+
+    const errors = results.filter((r) => r.error);
+    if (errors.length > 0) {
+      console.error("Some updates failed:", errors);
+      return NextResponse.json(
+        { error: "Some updates failed", details: errors },
+        { status: 500 }
+      );
+    }
+
+    console.log("All widgets updated successfully");
+    return NextResponse.json({ success: true, updated: results.length });
   } catch (error) {
     console.error("Error saving layout:", error);
     return NextResponse.json(

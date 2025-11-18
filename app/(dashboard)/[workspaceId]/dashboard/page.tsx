@@ -12,9 +12,10 @@ import {
   widgetsToLayout,
   layoutToUpdates,
   GRID_CONFIG,
+  snapToGrid,
 } from "@/lib/grid-utils";
 import { syncWorkspaceWidgets } from "@/lib/sync-widgets";
-import { Edit3, Save, X } from "lucide-react";
+import { Edit3, Save, X, Plus } from "lucide-react";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
@@ -23,7 +24,11 @@ const ResponsiveGridLayout = WidthProvider(GridLayout);
 export default function DashboardPage() {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [widgets, setWidgets] = useState<WorkspaceWidgetLayout[]>([]);
+  const [hiddenWidgets, setHiddenWidgets] = useState<WorkspaceWidgetLayout[]>(
+    []
+  );
   const [layout, setLayout] = useState<Layout[]>([]);
+  const [originalLayout, setOriginalLayout] = useState<Layout[]>([]); // Track layout before drag
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -64,14 +69,18 @@ export default function DashboardPage() {
         `
         )
         .eq("workspace_id", workspaceId)
-        .eq("is_visible", true)
         .order("y_position", { ascending: true });
 
       if (widgetsError) {
         console.error("Widgets error:", widgetsError);
       } else {
-        setWidgets(widgetsData || []);
-        setLayout(widgetsToLayout(widgetsData || []));
+        // Separate visible and hidden widgets
+        const visible = widgetsData?.filter((w) => w.is_visible) || [];
+        const hidden = widgetsData?.filter((w) => !w.is_visible) || [];
+
+        setWidgets(visible);
+        setHiddenWidgets(hidden);
+        setLayout(widgetsToLayout(visible));
       }
     } catch (error) {
       console.error("Error loading dashboard:", error);
@@ -81,8 +90,148 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDragStart = () => {
+    // Save current layout before drag starts
+    setOriginalLayout([...layout]);
+    console.log("🎯 Drag started, saved layout:", layout);
+  };
+
+  const handleDragStop = (
+    currentLayout: Layout[],
+    oldItem: Layout,
+    newItem: Layout
+  ) => {
+    if (!isEditMode) return;
+
+    console.log("🛑 Drag stopped");
+    console.log("Old item:", oldItem);
+    console.log("New item:", newItem);
+    console.log("Original layout:", originalLayout);
+
+    // Apply smart snapping based on widget width
+    const snappedX = snapToGrid(newItem.x, newItem.w);
+
+    // Ensure widget doesn't go beyond right edge
+    const maxX = GRID_CONFIG.cols - newItem.w;
+    const constrainedX = Math.max(0, Math.min(snappedX, maxX));
+    const constrainedY = Math.max(0, newItem.y);
+
+    console.log(`📍 Snapped position: (${constrainedX}, ${constrainedY})`);
+
+    // Find ALL overlapping widgets
+    const overlappingItems = originalLayout.filter((item) => {
+      if (item.i === newItem.i) return false;
+
+      // Check if the new position overlaps with this item's position
+      const xOverlap =
+        constrainedX < item.x + item.w && constrainedX + newItem.w > item.x;
+      const yOverlap =
+        constrainedY < item.y + item.h && constrainedY + newItem.h > item.y;
+
+      return xOverlap && yOverlap;
+    });
+
+    console.log(`💥 Found ${overlappingItems.length} overlapping widgets`);
+
+    // Find the closest overlapping widget (by center point distance)
+    let overlappingItem = null;
+    if (overlappingItems.length > 0) {
+      const draggedCenterX = constrainedX + newItem.w / 2;
+      const draggedCenterY = constrainedY + newItem.h / 2;
+
+      overlappingItem = overlappingItems.reduce((closest, item) => {
+        const itemCenterX = item.x + item.w / 2;
+        const itemCenterY = item.y + item.h / 2;
+
+        const distance = Math.sqrt(
+          Math.pow(draggedCenterX - itemCenterX, 2) +
+            Math.pow(draggedCenterY - itemCenterY, 2)
+        );
+
+        const closestCenterX = closest.x + closest.w / 2;
+        const closestCenterY = closest.y + closest.h / 2;
+        const closestDistance = Math.sqrt(
+          Math.pow(draggedCenterX - closestCenterX, 2) +
+            Math.pow(draggedCenterY - closestCenterY, 2)
+        );
+
+        return distance < closestDistance ? item : closest;
+      });
+
+      console.log(`🎯 Closest widget to swap with: ${overlappingItem.i}`, {
+        draggedWidget: `(${constrainedX}, ${constrainedY}) size ${newItem.w}x${newItem.h}`,
+        targetWidget: `(${overlappingItem.x}, ${overlappingItem.y}) size ${overlappingItem.w}x${overlappingItem.h}`,
+      });
+
+      // Check if widgets have the same width - only swap if they do
+      const originalDraggedItem = originalLayout.find((i) => i.i === newItem.i);
+      if (originalDraggedItem && originalDraggedItem.w !== overlappingItem.w) {
+        console.log(
+          `⚠️ Different widths detected (${originalDraggedItem.w} vs ${overlappingItem.w}) - cannot swap, will just place`
+        );
+        overlappingItem = null; // Don't swap if widths are different
+      }
+    }
+
+    // Create new layout with swap or snap
+    let newLayout;
+
+    if (overlappingItem) {
+      // SWAP: Both widgets exchange positions (only if same width)
+      newLayout = originalLayout.map((item) => {
+        if (item.i === newItem.i) {
+          console.log(
+            `🔄 SWAPPING: ${newItem.i} → (${overlappingItem.x}, ${overlappingItem.y})`
+          );
+          return {
+            ...item,
+            x: overlappingItem.x,
+            y: overlappingItem.y,
+            w: item.w,
+            h: item.h,
+          };
+        } else if (item.i === overlappingItem.i) {
+          const originalDraggedItem = originalLayout.find(
+            (i) => i.i === newItem.i
+          );
+          console.log(
+            `� SWAPPING: ${item.i} → (${originalDraggedItem?.x}, ${originalDraggedItem?.y})`
+          );
+          return {
+            ...item,
+            x: originalDraggedItem?.x || item.x,
+            y: originalDraggedItem?.y || item.y,
+            w: item.w,
+            h: item.h,
+          };
+        }
+        return item;
+      });
+    } else {
+      // NO SWAP: Use react-grid-layout's automatic collision prevention
+      console.log(`📌 NO SWAP: Using automatic layout with preventCollision`);
+
+      // Just apply snapping and let react-grid-layout handle the rest
+      newLayout = currentLayout.map((item) => {
+        if (item.i === newItem.i) {
+          // Apply snapping to the dragged item
+          return {
+            ...item,
+            x: constrainedX,
+            y: constrainedY,
+          };
+        }
+        return item;
+      });
+    }
+
+    console.log("✅ Final layout:", newLayout);
+    setLayout(newLayout);
+  };
+
   const handleLayoutChange = (newLayout: Layout[]) => {
-    if (isEditMode) {
+    // Only update layout in non-edit mode or for initial load
+    if (!isEditMode) {
       setLayout(newLayout);
     }
   };
@@ -118,6 +267,44 @@ export default function DashboardPage() {
     // Reset layout to original
     setLayout(widgetsToLayout(widgets));
     setIsEditMode(false);
+  };
+
+  const handleRemoveWidget = async (widgetId: string | number) => {
+    try {
+      const { error } = await supabase
+        .from("workspace_widget_layouts")
+        .update({ is_visible: false })
+        .eq("id", widgetId);
+
+      if (error) throw error;
+
+      const widgetToHide = widgets.find(
+        (w) => w.id.toString() === widgetId.toString()
+      );
+      if (widgetToHide) {
+        setWidgets(
+          widgets.filter((w) => w.id.toString() !== widgetId.toString())
+        );
+        setHiddenWidgets([...hiddenWidgets, widgetToHide]);
+        setLayout(layout.filter((l) => l.i !== widgetId.toString()));
+      }
+    } catch (error) {
+      console.error("Error removing widget:", error);
+    }
+  };
+
+  const handleAddWidget = async (widgetId: string | number) => {
+    try {
+      const { error } = await supabase
+        .from("workspace_widget_layouts")
+        .update({ is_visible: true })
+        .eq("id", widgetId);
+
+      if (error) throw error;
+      await loadDashboard();
+    } catch (error) {
+      console.error("Error adding widget:", error);
+    }
   };
 
   const primaryColor = workspace?.theme_config?.primaryColor || "#3b82f6";
@@ -172,8 +359,9 @@ export default function DashboardPage() {
           {!isEditMode ? (
             <Button
               onClick={() => setIsEditMode(true)}
-              variant="outline"
-              className="gap-2"
+              variant="default"
+              size="default"
+              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <Edit3 className="h-4 w-4" />
               Edit Layout
@@ -183,6 +371,7 @@ export default function DashboardPage() {
               <Button
                 onClick={handleCancelEdit}
                 variant="outline"
+                size="default"
                 className="gap-2"
               >
                 <X className="h-4 w-4" />
@@ -191,8 +380,9 @@ export default function DashboardPage() {
               <Button
                 onClick={handleSaveLayout}
                 disabled={isSaving}
-                className="gap-2"
-                style={{ backgroundColor: primaryColor }}
+                variant="default"
+                size="default"
+                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Save className="h-4 w-4" />
                 {isSaving ? "Saving..." : "Save Layout"}
@@ -225,8 +415,11 @@ export default function DashboardPage() {
             rowHeight={GRID_CONFIG.rowHeight}
             margin={GRID_CONFIG.margin}
             containerPadding={GRID_CONFIG.containerPadding}
-            compactType={GRID_CONFIG.compactType}
+            compactType="vertical"
+            preventCollision={false}
             onLayoutChange={handleLayoutChange}
+            onDragStart={handleDragStart}
+            onDragStop={handleDragStop}
             isDraggable={isEditMode}
             isResizable={isEditMode}
             draggableHandle=".drag-handle"
@@ -242,6 +435,18 @@ export default function DashboardPage() {
 
               return (
                 <div key={widget.id} className="widget-container">
+                  {/* Remove Button - minimal X icon (only visible in edit mode) */}
+                  {isEditMode && (
+                    <button
+                      onClick={() => handleRemoveWidget(widget.id)}
+                      className="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors group"
+                      title="Remove widget"
+                      aria-label="Remove widget"
+                    >
+                      <X className="h-4 w-4 text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-200" />
+                    </button>
+                  )}
+
                   {/* Drag Handle (only visible in edit mode) */}
                   {isEditMode && (
                     <div
@@ -268,6 +473,38 @@ export default function DashboardPage() {
               );
             })}
           </ResponsiveGridLayout>
+        </div>
+      )}
+
+      {/* Add Widget Section (only visible in edit mode) */}
+      {isEditMode && hiddenWidgets.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Add Widgets
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {hiddenWidgets.map((widget) => (
+              <Card
+                key={widget.id}
+                className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-gray-300 hover:border-gray-400"
+                onClick={() => handleAddWidget(widget.id)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900 text-sm">
+                        {widget.widget_type?.display_name}
+                      </h4>
+                      <p className="text-xs text-gray-500 mt-1">Click to add</p>
+                    </div>
+                    <div className="ml-3 bg-primary/10 text-primary rounded-full p-2">
+                      <Plus className="h-4 w-4" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       )}
 
@@ -327,6 +564,52 @@ export default function DashboardPage() {
         .edit-mode .react-grid-item:hover {
           border-color: ${primaryColor};
           background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* Visual grid snap indicators */
+        .edit-mode .react-grid-layout::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-image: repeating-linear-gradient(
+            to right,
+            transparent,
+            transparent calc(100% / 12 - 1px),
+            rgba(59, 130, 246, 0.1) calc(100% / 12 - 1px),
+            rgba(59, 130, 246, 0.1) calc(100% / 12)
+          );
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        /* Highlight major snap points (3-column intervals) */
+        .edit-mode .react-grid-layout::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-image: repeating-linear-gradient(
+            to right,
+            transparent,
+            transparent calc(100% / 4 - 2px),
+            rgba(59, 130, 246, 0.2) calc(100% / 4 - 2px),
+            rgba(59, 130, 246, 0.2) calc(100% / 4)
+          );
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .edit-mode .react-grid-item {
+          z-index: 1;
+        }
+
+        .react-grid-item.react-draggable-dragging {
+          z-index: 100 !important;
         }
 
         .drag-handle {
