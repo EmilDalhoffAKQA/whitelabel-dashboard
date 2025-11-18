@@ -10,28 +10,132 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { LayoutGrid, BarChart3, Table2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { 
+  LayoutGrid, 
+  TrendingUp, 
+  Clock, 
+  Users, 
+  MessageSquare, 
+  Star,
+  BarChart3,
+  PieChart,
+  Activity,
+  Target,
+  ThumbsUp,
+  CheckCircle2,
+  Zap,
+  Plus
+} from "lucide-react";
 import { Workspace } from "@/lib/types";
 
-interface Widget {
+interface WidgetType {
   id: string;
-  name: string;
   display_name: string;
   component_name: string;
-  is_active: boolean;
   category: string;
   width: number;
   height: number;
+  description?: string;
 }
 
-type WidgetSize = "small" | "medium" | "large";
+interface WorkspaceWidget {
+  id: string;
+  widget_type_id: string;
+  is_visible: boolean;
+  widget_type?: WidgetType;
+}
+
+// Widget metadata with descriptions
+const widgetDescriptions: Record<string, { description: string; icon: any; useCase: string }> = {
+  "TotalConversationsWidget": {
+    description: "Track the total number of customer conversations over time",
+    icon: MessageSquare,
+    useCase: "Monitor overall chat volume and identify busy periods"
+  },
+  "ActiveUsersTodayWidget": {
+    description: "See how many users are currently active on your platform",
+    icon: Users,
+    useCase: "Real-time monitoring of concurrent user activity"
+  },
+  "AverageResponseTimeWidget": {
+    description: "Monitor your team's average response time to customer messages",
+    icon: Clock,
+    useCase: "Ensure quick responses and improve customer satisfaction"
+  },
+  "ResolutionRateWidget": {
+    description: "Percentage of conversations successfully resolved",
+    icon: CheckCircle2,
+    useCase: "Track team effectiveness in solving customer issues"
+  },
+  "NPSScoreWidget": {
+    description: "Net Promoter Score - measure customer loyalty and satisfaction",
+    icon: Star,
+    useCase: "Gauge overall customer sentiment and brand advocacy"
+  },
+  "CustomerSentimentWidget": {
+    description: "Analyze customer emotions across all conversations",
+    icon: ThumbsUp,
+    useCase: "Identify trends in customer satisfaction and pain points"
+  },
+  "ConversationVolumeWidget": {
+    description: "Visual timeline of conversation volume over the last 7 days",
+    icon: TrendingUp,
+    useCase: "Spot trends and plan resource allocation"
+  },
+  "ResponseTimeTrendWidget": {
+    description: "Track how response times change over time",
+    icon: Activity,
+    useCase: "Monitor service quality improvements or degradation"
+  },
+  "SatisfactionTrendWidget": {
+    description: "Customer satisfaction scores tracked over time",
+    icon: BarChart3,
+    useCase: "Measure the impact of service improvements"
+  },
+  "ChannelDistributionWidget": {
+    description: "See which channels customers prefer (chat, email, phone, etc.)",
+    icon: PieChart,
+    useCase: "Allocate resources to the right communication channels"
+  },
+  "AgentPerformanceWidget": {
+    description: "Compare individual agent metrics and performance",
+    icon: Target,
+    useCase: "Identify top performers and coaching opportunities"
+  },
+  "PeakHoursWidget": {
+    description: "Identify the busiest hours for customer support",
+    icon: Zap,
+    useCase: "Optimize staffing schedules based on demand"
+  },
+  "LongConversationsWidget": {
+    description: "Track conversations exceeding 5+ messages",
+    icon: MessageSquare,
+    useCase: "Identify complex issues requiring special attention"
+  },
+  "RecentConversationsWidget": {
+    description: "Browse the most recent customer interactions",
+    icon: LayoutGrid,
+    useCase: "Quick access to ongoing conversations"
+  },
+};
+
+const getSizeLabel = (width: number, height: number): string => {
+  if (width <= 3) return "Small";
+  if (width <= 6) return "Medium";
+  return "Large";
+};
+
+const getSizeColor = (width: number): string => {
+  if (width <= 3) return "bg-blue-100 text-blue-700";
+  if (width <= 6) return "bg-purple-100 text-purple-700";
+  return "bg-pink-100 text-pink-700";
+};
 
 export default function DashboardSettingsPage() {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
-  const [widgets, setWidgets] = useState<Widget[]>([]);
+  const [workspaceWidgets, setWorkspaceWidgets] = useState<WorkspaceWidget[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const router = useRouter();
   const params = useParams();
   const workspaceId = params?.workspaceId as string;
@@ -49,18 +153,35 @@ export default function DashboardSettingsPage() {
         .eq("id", workspaceId)
         .single();
 
-      if (workspaceError) throw workspaceError;
+      if (workspaceError || !workspaceData) {
+        router.push("/workspaces");
+        return;
+      }
+
       setWorkspace(workspaceData);
 
-      // Fetch widgets - both global (workspace_id IS NULL) and workspace-specific
+      // Fetch workspace widgets with their types
       const { data: widgetsData, error: widgetsError } = await supabase
-        .from("widget_types")
-        .select("*")
-        .or(`workspace_id.is.null,workspace_id.eq.${workspaceId}`)
-        .order("sort_order", { ascending: true });
+        .from("workspace_widget_layouts")
+        .select(`
+          id,
+          widget_type_id,
+          is_visible,
+          widget_type:widget_types(
+            id,
+            display_name,
+            component_name,
+            category,
+            width,
+            height
+          )
+        `)
+        .eq("workspace_id", workspaceId)
+        .order("widget_type(display_name)", { ascending: true });
 
-      if (widgetsError) throw widgetsError;
-      setWidgets(widgetsData || []);
+      if (!widgetsError && widgetsData) {
+        setWorkspaceWidgets(widgetsData as any);
+      }
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
@@ -68,185 +189,186 @@ export default function DashboardSettingsPage() {
     }
   };
 
-  const toggleWidget = async (widgetId: string, currentState: boolean) => {
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from("widget_types")
-        .update({ is_active: !currentState })
-        .eq("id", widgetId);
-
-      if (error) throw error;
-
-      // Update local state
-      setWidgets(
-        widgets.map((w) =>
-          w.id === widgetId ? { ...w, is_active: !currentState } : w
-        )
-      );
-    } catch (error) {
-      console.error("Error updating widget:", error);
-      alert("Failed to update widget");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const getCategoryLabel = (category: string) => {
-    return category.charAt(0).toUpperCase() + category.slice(1);
-  };
-
-  const getWidgetSize = (width: number, height: number): WidgetSize => {
-    if (width <= 3 && height === 1) return "small";
-    if (width <= 6 && height === 2) return "medium";
-    return "large";
-  };
-
-  const groupWidgetsBySize = () => {
-    const grouped: Record<WidgetSize, Widget[]> = {
-      small: [],
-      medium: [],
-      large: [],
-    };
-
-    widgets.forEach((widget) => {
-      const size = getWidgetSize(widget.width, widget.height);
-      grouped[size].push(widget);
-    });
-
-    return grouped;
-  };
-
-  const getSizeConfig = (size: WidgetSize) => {
-    switch (size) {
-      case "small":
-        return {
-          title: "Compact Widgets",
-          description: "Quick stat cards and metrics at a glance",
-          icon: LayoutGrid,
-          color: "text-blue-600",
-          bgColor: "bg-blue-50",
-        };
-      case "medium":
-        return {
-          title: "Chart Widgets",
-          description: "Interactive charts and visualizations",
-          icon: BarChart3,
-          color: "text-purple-600",
-          bgColor: "bg-purple-50",
-        };
-      case "large":
-        return {
-          title: "Data Tables",
-          description: "Detailed tables and comprehensive views",
-          icon: Table2,
-          color: "text-green-600",
-          bgColor: "bg-green-50",
-        };
-    }
-  };
+  const primaryColor = workspace?.theme_config?.primaryColor || "#3b82f6";
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
-  const groupedWidgets = groupWidgetsBySize();
-  const activeCount = widgets.filter((w) => w.is_active).length;
-  const primaryColor = workspace?.theme_config?.primaryColor || "#3b82f6";
+  if (!workspace) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64">
+        <p className="text-gray-500 mb-4">Workspace not found</p>
+        <button
+          onClick={() => router.push("/workspaces")}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Go to Workspaces
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <style jsx global>{`
-        button[role="switch"][data-state="checked"] {
-          background-color: ${primaryColor} !important;
-        }
-        button[role="switch"][data-state="unchecked"] {
-          border: 1px solid #d1d5db !important;
-        }
-        button[role="switch"] span[data-state="checked"] {
-          background-color: white !important;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-        }
-        button[role="switch"] span[data-state="unchecked"] {
-          background-color: white !important;
-          border: 1px solid #d1d5db !important;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
-        }
-      `}</style>
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Dashboard Widgets
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Customize which widgets appear on your dashboard
-          </p>
-        </div>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-gray-900">{activeCount}</div>
-          <div className="text-sm text-gray-600">Active widgets</div>
-        </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Widget Library</h1>
+        <p className="text-gray-600 mt-2">
+          Browse available analytics widgets and their capabilities
+        </p>
       </div>
 
-      <div className="grid gap-6">
-        {(["small", "medium", "large"] as WidgetSize[]).map((size) => {
-          const sizeWidgets = groupedWidgets[size];
-          if (sizeWidgets.length === 0) return null;
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="border-gray-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Total Widgets
+                </p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {workspaceWidgets.length}
+                </p>
+              </div>
+              <div 
+                className="p-3 rounded-lg"
+                style={{ 
+                  backgroundColor: `${primaryColor}10`,
+                  color: primaryColor 
+                }}
+              >
+                <LayoutGrid className="h-6 w-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-          const config = getSizeConfig(size);
-          const Icon = config.icon;
-          const activeInSize = sizeWidgets.filter((w) => w.is_active).length;
+        <Card className="border-gray-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Currently Active
+                </p>
+                <p className="text-3xl font-bold" style={{ color: primaryColor }}>
+                  {workspaceWidgets.filter((w) => w.is_visible).length}
+                </p>
+              </div>
+              <div 
+                className="p-3 rounded-lg"
+                style={{ 
+                  backgroundColor: `${primaryColor}10`,
+                  color: primaryColor 
+                }}
+              >
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-gray-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Available to Add
+                </p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {workspaceWidgets.filter((w) => !w.is_visible).length}
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-gray-100">
+                <Plus className="h-6 w-6 text-gray-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Widget Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+        {workspaceWidgets.map((widget) => {
+          const widgetType = widget.widget_type;
+          if (!widgetType) return null;
+
+          const metadata = widgetDescriptions[widgetType.component_name] || {
+            description: "Analytics widget for monitoring key metrics",
+            icon: BarChart3,
+            useCase: "Track important business metrics"
+          };
+
+          const IconComponent = metadata.icon;
+          const sizeLabel = getSizeLabel(widgetType.width, widgetType.height);
+          const sizeColor = getSizeColor(widgetType.width);
 
           return (
-            <Card key={size}>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${config.bgColor}`}>
-                    <Icon className={`w-5 h-5 ${config.color}`} />
+            <Card 
+              key={widget.id} 
+              className={`relative transition-all hover:shadow-md ${
+                widget.is_visible 
+                  ? "border-gray-200" 
+                  : "border-gray-100 bg-gray-50/50"
+              }`}
+            >
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div 
+                    className="p-2.5 rounded-lg"
+                    style={{ 
+                      backgroundColor: `${primaryColor}10`,
+                      color: primaryColor 
+                    }}
+                  >
+                    <IconComponent className="h-5 w-5" />
                   </div>
-                  <div className="flex-1">
-                    <CardTitle>{config.title}</CardTitle>
-                    <CardDescription>{config.description}</CardDescription>
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {activeInSize} of {sizeWidgets.length} active
-                  </div>
+                  {widget.is_visible ? (
+                    <Badge 
+                      className="text-xs font-medium"
+                      style={{
+                        backgroundColor: `${primaryColor}15`,
+                        color: primaryColor,
+                        border: `1px solid ${primaryColor}30`
+                      }}
+                    >
+                      Active
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs font-medium text-gray-500 border-gray-200">
+                      Available
+                    </Badge>
+                  )}
+                </div>
+                
+                <CardTitle className="text-base font-semibold text-gray-900 mb-2">
+                  {widgetType.display_name}
+                </CardTitle>
+                
+                <div className="flex gap-2">
+                  <Badge variant="secondary" className={`text-xs ${sizeColor} border-0`}>
+                    {sizeLabel}
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600 border-0">
+                    {widgetType.category}
+                  </Badge>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="grid gap-3">
-                  {sizeWidgets.map((widget) => (
-                    <div
-                      key={widget.id}
-                      className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
-                        widget.is_active
-                          ? "bg-white border-gray-200 shadow-sm"
-                          : "bg-gray-50 border-gray-100 opacity-60"
-                      }`}
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-gray-900">
-                            {widget.display_name}
-                          </h3>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                            {getCategoryLabel(widget.category)}
-                          </span>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={widget.is_active}
-                        onCheckedChange={() =>
-                          toggleWidget(widget.id, widget.is_active)
-                        }
-                        disabled={saving}
-                      />
-                    </div>
-                  ))}
+
+              <CardContent className="pt-0 space-y-3">
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {metadata.description}
+                </p>
+
+                <div className="pt-3 border-t border-gray-100">
+                  <p className="text-xs text-gray-500">
+                    {metadata.useCase}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -254,17 +376,43 @@ export default function DashboardSettingsPage() {
         })}
       </div>
 
-      <div className="flex justify-between items-center pt-4 border-t">
-        <p className="text-sm text-gray-600">
-          Changes are saved automatically and will take effect immediately
-        </p>
-        <button
-          onClick={() => router.push(`/${workspaceId}/dashboard`)}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-        >
-          View Dashboard
-        </button>
-      </div>
+      {/* Help Section */}
+      <Card className="border-gray-200">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <div 
+              className="p-2 rounded-lg"
+              style={{ 
+                backgroundColor: `${primaryColor}10`,
+                color: primaryColor 
+              }}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </div>
+            <CardTitle className="text-base">Managing Your Dashboard</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid sm:grid-cols-2 gap-4 text-sm text-gray-600">
+            <div>
+              <p className="font-medium text-gray-900 mb-1">Adding Widgets</p>
+              <p>Click "Edit Layout" on the dashboard, then select from the "+ Add Widget" menu</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900 mb-1">Removing Widgets</p>
+              <p>In edit mode, click the × button on any widget card</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900 mb-1">Rearranging</p>
+              <p>Drag widgets to reposition them while in edit mode</p>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900 mb-1">Widget Sizes</p>
+              <p>Small (3 cells), Medium (6 cells), Large (12 cells)</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

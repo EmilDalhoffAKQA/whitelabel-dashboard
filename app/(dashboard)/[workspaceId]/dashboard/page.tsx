@@ -6,6 +6,14 @@ import { supabase } from "@/lib/supabase";
 import { Workspace, WorkspaceWidgetLayout } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { getWidgetComponent } from "@/components/widgets";
 import GridLayout, { Layout, WidthProvider } from "react-grid-layout";
 import {
@@ -377,6 +385,33 @@ export default function DashboardPage() {
                 <X className="h-4 w-4" />
                 Cancel
               </Button>
+
+              {/* Add Widget Dropdown */}
+              {hiddenWidgets.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="default" className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add Widget
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Available Widgets</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {hiddenWidgets.map((widget) => (
+                      <DropdownMenuItem
+                        key={widget.id}
+                        onClick={() => handleAddWidget(widget.id)}
+                        className="cursor-pointer"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        <span>{widget.widget_type?.display_name}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
               <Button
                 onClick={handleSaveLayout}
                 disabled={isSaving}
