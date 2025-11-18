@@ -43,3 +43,29 @@ export interface WidgetType {
   sort_order: number;
   is_active: boolean;
 }
+
+export interface WorkspaceWidgetLayout {
+  id: string;
+  workspace_id: number;
+  widget_type_id: string;
+  x_position: number;
+  y_position: number;
+  width: number;
+  height: number;
+  is_visible: boolean;
+  created_at: string;
+  updated_at: string;
+  widget_type?: WidgetType;
+}
+
+export interface WidgetType {
+  id: string;
+  name: string;
+  display_name: string;
+  category: string;
+  component_name: string;
+  width: number;
+  height: number;
+  sort_order: number;
+  is_active: boolean;
+}
