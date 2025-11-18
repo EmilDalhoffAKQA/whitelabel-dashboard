@@ -5,7 +5,6 @@ import {
   generatePasswordResetTicket,
   getUserByEmail,
 } from "@/lib/auth0";
-import { sendInviteEmail } from "@/lib/mailjet";
 
 interface OnboardingRequest {
   companyName: string;
@@ -175,6 +174,7 @@ export async function POST(req: NextRequest) {
     // Step 5: Send invitation email with password setup link
     if (inviteLink) {
       try {
+        const { sendInviteEmail } = await import("@/lib/mailjet");
         await sendInviteEmail({
           to: body.adminEmail,
           name: body.adminName,

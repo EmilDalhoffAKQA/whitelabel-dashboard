@@ -1,9 +1,19 @@
 import mailjet from "node-mailjet";
 
-const mailjetClient = mailjet.apiConnect(
-  process.env.MAILJET_API_KEY!,
-  process.env.MAILJET_API_SECRET!
-);
+let mailjetClient: ReturnType<typeof mailjet.apiConnect> | null = null;
+
+function getMailjetClient() {
+  if (!mailjetClient) {
+    if (!process.env.MAILJET_API_KEY || !process.env.MAILJET_API_SECRET) {
+      throw new Error("Mailjet API credentials are not configured");
+    }
+    mailjetClient = mailjet.apiConnect(
+      process.env.MAILJET_API_KEY,
+      process.env.MAILJET_API_SECRET
+    );
+  }
+  return mailjetClient;
+}
 
 export async function sendInviteEmail({
   to,
@@ -14,7 +24,8 @@ export async function sendInviteEmail({
   name: string;
   inviteLink: string;
 }) {
-  const result = await mailjetClient.post("send", { version: "v3.1" }).request({
+  const client = getMailjetClient();
+  const result = await client.post("send", { version: "v3.1" }).request({
     Messages: [
       {
         From: {
