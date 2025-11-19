@@ -107,7 +107,11 @@ export async function POST(req: NextRequest) {
       // Always send custom invite email using Mailjet, even if inviteLink is null
       try {
         const { sendInviteEmail } = await import("@/lib/mailjet");
-        await sendInviteEmail({ to: email, name, inviteLink: inviteLink || "" });
+        await sendInviteEmail({
+          to: email,
+          name,
+          inviteLink: inviteLink || "",
+        });
         console.log("Custom invite email sent via Mailjet");
       } catch (mailErr) {
         console.error("Failed to send custom invite email:", mailErr);
