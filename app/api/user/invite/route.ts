@@ -104,15 +104,13 @@ export async function POST(req: NextRequest) {
         console.log("Auth0 password reset ticket generated:", inviteLink);
       }
 
-      // Send custom invite email using Mailjet
-      if (inviteLink) {
-        try {
-          const { sendInviteEmail } = await import("@/lib/mailjet");
-          await sendInviteEmail({ to: email, name, inviteLink });
-          console.log("Custom invite email sent via Mailjet");
-        } catch (mailErr) {
-          console.error("Failed to send custom invite email:", mailErr);
-        }
+      // Always send custom invite email using Mailjet, even if inviteLink is null
+      try {
+        const { sendInviteEmail } = await import("@/lib/mailjet");
+        await sendInviteEmail({ to: email, name, inviteLink: inviteLink || "" });
+        console.log("Custom invite email sent via Mailjet");
+      } catch (mailErr) {
+        console.error("Failed to send custom invite email:", mailErr);
       }
     } catch (err) {
       console.error("Auth0 user creation exception:", err);
