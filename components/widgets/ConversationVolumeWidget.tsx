@@ -12,10 +12,14 @@ import {
 
 interface ConversationVolumeWidgetProps {
   primaryColor?: string;
+  marketId?: number;
+  workspaceId?: number;
 }
 
 export function ConversationVolumeWidget({
   primaryColor = "#3b82f6",
+  marketId,
+  workspaceId,
 }: ConversationVolumeWidgetProps) {
   // Generate mock data for the last 7 days
   const generateMockData = () => {

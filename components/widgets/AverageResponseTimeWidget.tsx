@@ -4,10 +4,14 @@ import { StatCard } from "./StatCard";
 
 interface AverageResponseTimeWidgetProps {
   primaryColor?: string;
+  marketId?: number;
+  workspaceId?: number;
 }
 
 export function AverageResponseTimeWidget({
   primaryColor,
+  marketId,
+  workspaceId,
 }: AverageResponseTimeWidgetProps) {
   return (
     <StatCard

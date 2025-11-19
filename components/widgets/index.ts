@@ -14,7 +14,17 @@ import { AgentPerformanceWidget } from "./AgentPerformanceWidget";
 import { SatisfactionTrendWidget } from "./SatisfactionTrendWidget";
 import { ResponseTimeTrendWidget } from "./ResponseTimeTrendWidget";
 
-export const widgetRegistry: Record<string, React.ComponentType> = {
+// Define common widget props interface
+export interface WidgetProps {
+  primaryColor?: string;
+  marketId?: number;
+  workspaceId?: number;
+}
+
+export const widgetRegistry: Record<
+  string,
+  React.ComponentType<WidgetProps>
+> = {
   TotalConversationsWidget,
   LongConversationsWidget,
   NPSScoreWidget,
@@ -33,6 +43,6 @@ export const widgetRegistry: Record<string, React.ComponentType> = {
 
 export function getWidgetComponent(
   componentName: string
-): React.ComponentType | null {
+): React.ComponentType<WidgetProps> | null {
   return widgetRegistry[componentName] || null;
 }

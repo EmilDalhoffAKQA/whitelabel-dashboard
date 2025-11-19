@@ -98,6 +98,11 @@ export default async function WorkspaceLayout({
       roles: ["admin", "editor"],
     },
     {
+      href: `/${workspaceId}/markets`, // 👈 ADD THIS
+      label: "Markets",
+      roles: ["admin", "editor"],
+    },
+    {
       href: `/${workspaceId}/users`,
       label: "Users",
       roles: ["admin"],

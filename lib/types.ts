@@ -1,3 +1,39 @@
+export interface Market {
+  id: number;
+  workspace_id: number;
+  name: string;
+  market_code: string;
+  language: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Conversation {
+  id: number;
+  workspace_id: number;
+  market_id: number;
+  status: string;
+  sentiment: string;
+  satisfaction_score: number | null;
+  created_at: string;
+}
+
+export interface AnalyticsSnapshot {
+  id: number;
+  workspace_id: number;
+  market_id: number;
+  timestamp: string;
+  metrics: {
+    total_conversations: number;
+    active_users: number;
+    avg_satisfaction_score: number;
+    resolution_rate: number;
+    sentiment_positive: number;
+    sentiment_neutral: number;
+    sentiment_negative: number;
+  };
+  created_at: string;
+}
 export type UserRole = "superadmin" | "admin" | "editor";
 export interface Workspace {
   id: string;

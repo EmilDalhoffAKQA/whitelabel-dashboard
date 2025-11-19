@@ -12,10 +12,14 @@ import {
 
 interface CustomerSentimentWidgetProps {
   primaryColor?: string;
+  marketId?: number;
+  workspaceId?: number;
 }
 
 export function CustomerSentimentWidget({
   primaryColor = "#3b82f6",
+  marketId,
+  workspaceId,
 }: CustomerSentimentWidgetProps) {
   const data = [
     { name: "Positive", value: 65, color: primaryColor },

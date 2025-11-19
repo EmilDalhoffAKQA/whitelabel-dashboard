@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { usePathname } from "next/navigation";
-import { Home, Users, Paintbrush, Settings } from "lucide-react";
+import { Home, Users, Paintbrush, Settings, Globe } from "lucide-react";
 
 type NavItem = {
   href: string;
@@ -22,6 +22,7 @@ type AppSidebarProps = {
 
 const iconMap: Record<string, any> = {
   Dashboard: Home,
+  Markets: Globe,  // 👈 ADD THIS
   Users: Users,
   Settings: Paintbrush, // Theme settings with brush icon
 };

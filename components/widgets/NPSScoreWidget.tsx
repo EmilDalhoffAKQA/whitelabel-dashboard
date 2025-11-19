@@ -4,9 +4,15 @@ import { StatCard } from "./StatCard";
 
 interface NPSScoreWidgetProps {
   primaryColor?: string;
+  marketId?: number;
+  workspaceId?: number;
 }
 
-export function NPSScoreWidget({ primaryColor }: NPSScoreWidgetProps) {
+export function NPSScoreWidget({
+  primaryColor,
+  marketId,
+  workspaceId,
+}: NPSScoreWidgetProps) {
   const mockData = {
     score: Math.floor(Math.random() * 50) + 50,
     trend: Math.floor(Math.random() * 15) - 5,
