@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { usePathname } from "next/navigation";
-import { Home, Users, Paintbrush, Settings, Globe } from "lucide-react";
+import { Home, UserRoundPlus, Brush, Cog, Earth } from "lucide-react";
 
 type NavItem = {
   href: string;
@@ -22,9 +22,9 @@ type AppSidebarProps = {
 
 const iconMap: Record<string, any> = {
   Dashboard: Home,
-  Markets: Globe,  // 👈 ADD THIS
-  Users: Users,
-  Settings: Paintbrush, // Theme settings with brush icon
+  Markets: Earth, // 👈 ADD THIS
+  Users: UserRoundPlus,
+  Settings: Brush, // Theme settings with brush icon
 };
 
 export function AppSidebar({
@@ -43,7 +43,15 @@ export function AppSidebar({
       {/* Logo - Bigger at the top */}
       <div className="pb-8">
         {logo ? (
-          <img src={logo} alt="Logo" className="object-contain h-20 w-20" />
+          <div className="w-20 h-20 rounded-3xl bg-white flex items-center justify-center">
+            <div className="max-w-[64px] max-h-[64px] w-full h-full flex items-center justify-center">
+              <img
+                src={logo}
+                alt="Logo"
+                className="object-contain w-full h-full block "
+              />
+            </div>
+          </div>
         ) : (
           <div
             className="w-20 h-20 rounded-3xl flex items-center justify-center"
@@ -90,7 +98,7 @@ export function AppSidebar({
           className="w-10 h-10 rounded-2xl flex items-center justify-center text-gray-600 bg-transparent hover:bg-gray-100/50 transition-colors"
           title="Dashboard Settings"
         >
-          <Settings className="w-5 h-5" strokeWidth={2} />
+          <Cog className="w-5 h-5" strokeWidth={2} />
         </button>
 
         {/* Logout button */}

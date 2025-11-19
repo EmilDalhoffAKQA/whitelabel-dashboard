@@ -23,7 +23,7 @@ import {
   snapToGrid,
 } from "@/lib/grid-utils";
 import { syncWorkspaceWidgets } from "@/lib/sync-widgets";
-import { Edit3, Save, X, Plus } from "lucide-react";
+import { SquarePen, Save, X, Plus } from "lucide-react";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
@@ -367,12 +367,12 @@ export default function DashboardPage() {
           {!isEditMode ? (
             <Button
               onClick={() => setIsEditMode(true)}
-              variant="default"
+              variant="outline"
               size="default"
-              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              className="gap-2 bg-white border border-gray-200 hover:bg-gray-50"
             >
-              <Edit3 className="h-4 w-4" />
-              Edit Layout
+              <SquarePen className="h-4 w-4" />
+              Edit layout
             </Button>
           ) : (
             <>
@@ -380,9 +380,9 @@ export default function DashboardPage() {
                 onClick={handleCancelEdit}
                 variant="outline"
                 size="default"
-                className="gap-2"
+                className="gap-2 bg-red-500 border border-gray-200  hover:bg-gray-50 text-white"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4 text-white" />
                 Cancel
               </Button>
 
@@ -390,12 +390,19 @@ export default function DashboardPage() {
               {hiddenWidgets.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="default" className="gap-2">
-                      <Plus className="h-4 w-4" />
+                    <Button
+                      variant="outline"
+                      size="default"
+                      className="gap-2 bg-white border border-gray-200 text-gray-900 hover:bg-gray-50"
+                    >
+                      <Plus className="h-3 w-3" />
                       Add Widget
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuContent
+                    align="start"
+                    className="w-56 bg-white border-gray-200"
+                  >
                     <DropdownMenuLabel>Available Widgets</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {hiddenWidgets.map((widget) => (
@@ -415,9 +422,9 @@ export default function DashboardPage() {
               <Button
                 onClick={handleSaveLayout}
                 disabled={isSaving}
-                variant="default"
+                variant="outline"
                 size="default"
-                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                className="gap-2 bg-white border border-gray-200 text-gray-900 hover:bg-gray-50"
               >
                 <Save className="h-4 w-4" />
                 {isSaving ? "Saving..." : "Save Layout"}
@@ -544,7 +551,6 @@ export default function DashboardPage() {
       )}
 
       <style jsx global>{`
-        /* Minimal styles to make RGL work with your existing design */
         .react-grid-layout {
           position: relative;
         }

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
-import { Plus, Mail, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 
 interface User {
   id: number;
@@ -23,6 +23,40 @@ interface Workspace {
 }
 
 export default function UsersPage() {
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInviteLoading(true);
+    setInviteStatus(null);
+
+    try {
+      const res = await fetch("/api/user/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: inviteForm.email,
+          name: inviteForm.name,
+          workspaceId: workspaceId,
+          role: inviteForm.role,
+        }),
+      });
+
+      if (res.ok) {
+        setInviteStatus(
+          "User invited successfully! They will receive an email."
+        );
+        setInviteForm({ email: "", name: "", role: "editor" });
+        setShowInvite(false);
+        loadData(); // Refresh the list
+      } else {
+        const err = await res.json();
+        setInviteStatus("Error: " + (err.error || "Unknown error"));
+      }
+    } catch (error) {
+      setInviteStatus("Error sending invite");
+    } finally {
+      setInviteLoading(false);
+    }
+  };
   const params = useParams();
   const workspaceId = params?.workspaceId as string;
   const [users, setUsers] = useState<User[]>([]);
@@ -80,45 +114,8 @@ export default function UsersPage() {
         })) || [];
 
       setUsers(formattedUsers);
-    } catch (error) {
-      console.error("Error loading users:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setInviteLoading(true);
-    setInviteStatus(null);
-
-    try {
-      const res = await fetch("/api/user/invite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: inviteForm.email,
-          name: inviteForm.name,
-          workspaceId: workspaceId,
-          role: inviteForm.role,
-        }),
-      });
-
-      if (res.ok) {
-        setInviteStatus(
-          "User invited successfully! They will receive an email."
-        );
-        setInviteForm({ email: "", name: "", role: "editor" });
-        setShowInvite(false);
-        loadData(); // Refresh the list
-      } else {
-        const err = await res.json();
-        setInviteStatus("Error: " + (err.error || "Unknown error"));
-      }
-    } catch (error) {
-      setInviteStatus("Error sending invite");
-    } finally {
-      setInviteLoading(false);
     }
   };
 
@@ -168,12 +165,6 @@ export default function UsersPage() {
       {/* Invite Form */}
       {showInvite && (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="w-5 h-5" />
-              Invite New User
-            </CardTitle>
-          </CardHeader>
           <CardContent>
             <form onSubmit={handleInvite} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -184,8 +175,10 @@ export default function UsersPage() {
                     onChange={(e) =>
                       setInviteForm({ ...inviteForm, name: e.target.value })
                     }
-                    placeholder="John Doe"
+                    placeholder="Your Full Name"
                     required
+                    className="border border-gray-200 rounded-lg focus:ring-2  focus:b
+                     px-3 py-2 bg-white text-gray-900 placeholder-gray-400 shadow-sm"
                   />
                 </div>
                 <div>
@@ -198,38 +191,62 @@ export default function UsersPage() {
                     onChange={(e) =>
                       setInviteForm({ ...inviteForm, email: e.target.value })
                     }
-                    placeholder="john@company.com"
+                    placeholder="Your Email Address"
                     required
+                    className="border border-gray-200 rounded-lg focus:ring-2 px-3 py-2 bg-white text-gray-900 placeholder-gray-400 shadow-sm"
                   />
                 </div>
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-2">Role</label>
-                <select
-                  value={inviteForm.role}
-                  onChange={(e) =>
-                    setInviteForm({ ...inviteForm, role: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="editor">Editor</option>
-                  <option value="admin">Admin</option>
-                </select>
+                <div className="relative">
+                  <select
+                    value={inviteForm.role}
+                    onChange={(e) =>
+                      setInviteForm({ ...inviteForm, role: e.target.value })
+                    }
+                    className="w-full appearance-none px-3 py-2 border border-gray-200 rounded-lg focus:ring-2  bg-white text-gray-900 shadow-sm pr-10 focus:outline-none"
+                    style={{ boxShadow: "none" }}
+                  >
+                    <option value="editor">Editor</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </span>
+                </div>
               </div>
-
               <div className="flex gap-2">
                 <Button
                   type="submit"
                   disabled={inviteLoading}
-                  className="text-white"
-                  style={{ backgroundColor: primaryColor }}
+                  className={`gap-2 rounded-lg px-4 py-2 font-medium shadow-sm border border-gray-200 ${
+                    inviteLoading
+                      ? "bg-blue-300"
+                      : "bg-blue-600 hover:bg-blue-700"
+                  } text-white`}
+                  style={{
+                    backgroundColor: inviteLoading ? "#93c5fd" : primaryColor,
+                  }}
                 >
                   {inviteLoading ? "Sending..." : "Send Invitation"}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
+                  className="gap-2 rounded-lg px-4 py-2 font-medium border border-gray-200 bg-white hover:bg-gray-50 text-gray-900"
                   onClick={() => setShowInvite(false)}
                 >
                   Cancel
