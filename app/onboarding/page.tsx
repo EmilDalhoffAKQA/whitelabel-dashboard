@@ -12,6 +12,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { ColorPicker } from "@/components/ui/color-picker";
 
 interface OnboardingFormData {
   companyName: string;
@@ -229,63 +230,21 @@ export default function OnboardingPage() {
                     </p>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">
-                      Primary Color
-                    </label>
-                    <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-2 bg-white">
-                      <div
-                        className="w-10 h-10 rounded border border-gray-300"
-                        style={{ backgroundColor: formData.primaryColor }}
-                      />
-                      <Input
-                        value={formData.primaryColor}
-                        onChange={(e) =>
-                          updateFormData(
-                            "primaryColor",
-                            e.target.value.toUpperCase()
-                          )
-                        }
-                        placeholder="#63513D"
-                        className="!border-0 !shadow-none focus-visible:!ring-0 focus-visible:!ring-offset-0 uppercase"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      If set, this will be the primary color for CTAs that will
-                      be displayed to end-users for this organization in your
-                      application's authentication flows.
-                    </p>
-                  </div>
+                  <ColorPicker
+                    color={formData.primaryColor}
+                    onChange={(color) => updateFormData("primaryColor", color)}
+                    label="Primary Color"
+                    description="If set, this will be the primary color for CTAs that will be displayed to end-users for this organization in your application's authentication flows."
+                  />
 
-                  <div>
-                    <label className="block text-sm font-semibold mb-2 ">
-                      Page Background Color
-                    </label>
-                    <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-2 bg-white">
-                      <div
-                        className="w-10 h-10 rounded border border-gray-300"
-                        style={{
-                          backgroundColor: formData.pageBackgroundColor,
-                        }}
-                      />
-                      <Input
-                        value={formData.pageBackgroundColor}
-                        onChange={(e) =>
-                          updateFormData(
-                            "pageBackgroundColor",
-                            e.target.value.toUpperCase()
-                          )
-                        }
-                        placeholder="#F8F8F8"
-                        className="!border-0 !shadow-none focus-visible:!ring-0 focus-visible:!ring-offset-0 uppercase"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      If set, this will be the page background color that will
-                      be displayed to end-users for this organization in your
-                      application's authentication flows.
-                    </p>
-                  </div>
+                  <ColorPicker
+                    color={formData.pageBackgroundColor}
+                    onChange={(color) =>
+                      updateFormData("pageBackgroundColor", color)
+                    }
+                    label="Page Background Color"
+                    description="If set, this will be the page background color that will be displayed to end-users for this organization in your application's authentication flows."
+                  />
                 </div>
 
                 <div className="flex gap-2">
