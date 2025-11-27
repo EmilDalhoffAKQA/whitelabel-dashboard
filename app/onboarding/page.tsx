@@ -66,7 +66,9 @@ export default function OnboardingPage() {
       const { workspace } = await response.json();
 
       // Show success message and redirect to login
-      alert(`Workspace "${workspace.name}" created successfully! Please check your email (${formData.adminEmail}) to set your password and log in.`);
+      alert(
+        `Workspace "${workspace.name}" created successfully! Please check your email (${formData.adminEmail}) to set your password and log in.`
+      );
       router.push(`/login`);
     } catch (err: any) {
       setError(err.message);

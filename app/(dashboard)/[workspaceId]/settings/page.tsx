@@ -48,7 +48,6 @@ export default function SettingsPage() {
 
       setWorkspaceName(workspace.name);
 
-      // Load existing theme config
       if (workspace.theme_config) {
         setFormData({
           logoUrl: workspace.theme_config.logo || workspace.logo_url || "",
@@ -78,7 +77,6 @@ export default function SettingsPage() {
     setSuccess(false);
 
     try {
-      // Update workspace theme in Supabase
       const { error: updateError } = await supabase
         .from("workspaces")
         .update({
@@ -98,7 +96,6 @@ export default function SettingsPage() {
 
       setSuccess(true);
 
-      // Refresh the page to apply new theme
       setTimeout(() => {
         router.refresh();
       }, 1000);
@@ -191,7 +188,8 @@ export default function SettingsPage() {
               />
               <p className="text-xs text-gray-500 mt-2">
                 If set, this is the logo that will be displayed to end-users for
-                this organization in any interaction with them.
+                this organization in any interaction with them. This will also
+                be used as the workspace favicon.
               </p>
             </div>
 

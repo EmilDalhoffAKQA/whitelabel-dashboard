@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
 import { AppSidebar } from "@/components/ui/dashboard/Sidebar";
+import { Metadata } from "next";
 
 async function getWorkspaceData(workspaceId: string, userEmail: string) {
   // Ensure we're on server-side with admin access
@@ -98,7 +99,7 @@ export default async function WorkspaceLayout({
       roles: ["admin", "editor"],
     },
     {
-      href: `/${workspaceId}/markets`, // 👈 ADD THIS
+      href: `/${workspaceId}/markets`,
       label: "Markets",
       roles: ["admin", "editor"],
     },
@@ -125,23 +126,38 @@ export default async function WorkspaceLayout({
     primaryColor: themeConfig?.primaryColor || "#2563eb",
     pageBackgroundColor: themeConfig?.pageBackgroundColor || "#F9FAFB",
     logo: themeConfig?.logo || data.workspace.logo_url || "",
-    favicon: themeConfig?.favicon || "",
+    favicon:
+      themeConfig?.favicon ||
+      themeConfig?.logo ||
+      data.workspace.logo_url ||
+      "",
   };
 
   console.log("Applied theme:", theme);
 
   return (
-    <div
-      className="flex w-full h-screen gap-4 p-4"
-      style={{ backgroundColor: theme.pageBackgroundColor }}
-    >
-      <AppSidebar
-        user={user}
-        navItems={filteredNavItems}
-        primaryColor={theme.primaryColor}
-        logo={theme.logo}
-      />
-      <main className="flex-1 overflow-y-auto">{children}</main>
-    </div>
+    <>
+      {/* Dynamic Favicon */}
+      {theme.favicon && (
+        <head>
+          <link rel="icon" href={theme.favicon} type="image/x-icon" />
+          <link rel="shortcut icon" href={theme.favicon} type="image/x-icon" />
+          <link rel="apple-touch-icon" href={theme.favicon} />
+        </head>
+      )}
+
+      <div
+        className="flex w-full h-screen gap-4 p-4"
+        style={{ backgroundColor: theme.pageBackgroundColor }}
+      >
+        <AppSidebar
+          user={user}
+          navItems={filteredNavItems}
+          primaryColor={theme.primaryColor}
+          logo={theme.logo}
+        />
+        <main className="flex-1 overflow-y-auto">{children}</main>
+      </div>
+    </>
   );
 }
