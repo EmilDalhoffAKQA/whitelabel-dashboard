@@ -28,7 +28,12 @@ export function generateAnalyticsMetrics(seed?: number) {
   };
 }
 
-export function generateSnapshotForDate(workspaceId: number, marketId: number, date: string, seed?: number) {
+export function generateSnapshotForDate(
+  workspaceId: number,
+  marketId: number,
+  date: string,
+  seed?: number
+) {
   return {
     workspace_id: workspaceId,
     market_id: marketId,

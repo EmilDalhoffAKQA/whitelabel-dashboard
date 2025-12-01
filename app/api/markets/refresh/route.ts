@@ -13,7 +13,10 @@ export async function POST(req: Request) {
     const days = typeof body.days === "number" ? body.days : 7;
 
     if (!workspaceId || !marketId) {
-      return NextResponse.json({ error: "workspaceId and marketId required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "workspaceId and marketId required" },
+        { status: 400 }
+      );
     }
 
     const snapshots = [] as any[];
@@ -21,7 +24,9 @@ export async function POST(req: Request) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const date = d.toISOString().split("T")[0];
-      snapshots.push(generateSnapshotForDate(workspaceId, marketId, date, Date.now() + i));
+      snapshots.push(
+        generateSnapshotForDate(workspaceId, marketId, date, Date.now() + i)
+      );
     }
 
     // Delete existing snapshots for these dates for this market/workspace to avoid duplicates
@@ -31,17 +36,25 @@ export async function POST(req: Request) {
       .delete()
       .eq("workspace_id", workspaceId)
       .eq("market_id", marketId)
-      .in("timestamp", dates.map((d) => `${d}T12:00:00`));
+      .in(
+        "timestamp",
+        dates.map((d) => `${d}T12:00:00`)
+      );
 
     // Insert new mock snapshots
-    const { error: snapError } = await supabase.from("analytics_snapshots").insert(snapshots);
+    const { error: snapError } = await supabase
+      .from("analytics_snapshots")
+      .insert(snapshots);
     if (snapError) throw snapError;
 
     // Also insert synthetic conversation rows so workspace-level conversation counts reflect the mock snapshots
     // Build conversation rows from snapshots.total_conversations
     const conversationRows: any[] = [];
     for (const s of snapshots) {
-      const count = Math.min(s.metrics.total_conversations || 0, MAX_CONVERSATIONS_PER_DAY);
+      const count = Math.min(
+        s.metrics.total_conversations || 0,
+        MAX_CONVERSATIONS_PER_DAY
+      );
       for (let i = 0; i < count; i++) {
         // create timestamps distributed across the day
         const created = new Date(s.timestamp);
@@ -67,15 +80,22 @@ export async function POST(req: Request) {
         const BATCH = 500;
         for (let i = 0; i < conversationRows.length; i += BATCH) {
           const batch = conversationRows.slice(i, i + BATCH);
-          const { error: convError } = await supabase.from("conversations").insert(batch);
-          if (convError) console.error("mock conversations insert error", convError);
+          const { error: convError } = await supabase
+            .from("conversations")
+            .insert(batch);
+          if (convError)
+            console.error("mock conversations insert error", convError);
         }
       } catch (e) {
         console.error("error inserting mock conversations", e);
       }
     }
 
-    return NextResponse.json({ ok: true, insertedSnapshots: snapshots.length, insertedConversations: conversationRows.length });
+    return NextResponse.json({
+      ok: true,
+      insertedSnapshots: snapshots.length,
+      insertedConversations: conversationRows.length,
+    });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "failed" }, { status: 500 });

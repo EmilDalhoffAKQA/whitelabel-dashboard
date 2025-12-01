@@ -69,7 +69,11 @@ export default function MarketDashboardPage() {
           await fetch(`/api/markets/refresh`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ workspaceId: workspaceId, marketId: marketData.id, days: 7 }),
+            body: JSON.stringify({
+              workspaceId: workspaceId,
+              marketId: marketData.id,
+              days: 7,
+            }),
           });
         } catch (e) {
           console.error("Failed to refresh mock data", e);
