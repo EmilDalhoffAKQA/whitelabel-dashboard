@@ -4,12 +4,12 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
   const pathname = request.nextUrl.pathname;
-  
+
   // Skip middleware for API routes entirely to avoid interfering with auth flow
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
-  
+
   const token = request.cookies.get("auth_token");
 
   // Debug logging
@@ -17,7 +17,7 @@ export function middleware(request: NextRequest) {
     pathname,
     hostname,
     hasToken: !!token,
-    cookies: request.cookies.getAll().map(c => c.name),
+    cookies: request.cookies.getAll().map((c) => c.name),
   });
 
   // Check auth FIRST before doing www redirect

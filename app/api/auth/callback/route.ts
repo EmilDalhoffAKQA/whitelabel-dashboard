@@ -58,7 +58,14 @@ export async function GET(req: NextRequest) {
 
     const userInfo = await userResponse.json();
 
-    await syncUserToSupabase(userInfo);
+    // Try to sync to Supabase, but don't fail auth if it doesn't work
+    try {
+      await syncUserToSupabase(userInfo);
+      console.log("[Callback] User synced to Supabase successfully");
+    } catch (syncError) {
+      console.error("[Callback] Failed to sync to Supabase (non-fatal):", syncError);
+      // Continue anyway - don't block authentication
+    }
 
     // Determine the correct hostname to redirect to
     const hostname = req.headers.get("host") || "";
@@ -121,7 +128,8 @@ export async function GET(req: NextRequest) {
 async function syncUserToSupabase(auth0User: any) {
   const client = supabaseAdmin;
   if (!client) {
-    throw new Error("Supabase admin client is not initialized");
+    console.warn("[Supabase] Admin client not initialized - skipping user sync");
+    return; // Don't throw, just return
   }
 
   const { data: user, error: userError } = await client
@@ -137,8 +145,14 @@ async function syncUserToSupabase(auth0User: any) {
     .select()
     .single();
 
-  if (userError || !user) {
-    throw new Error("Failed to sync user");
+  if (userError) {
+    console.error("[Supabase] Error syncing user:", userError);
+    throw new Error(`Failed to sync user: ${userError.message}`);
   }
-  // No workspace logic here; just ensure user exists.
+  
+  if (!user) {
+    throw new Error("Failed to sync user: No user returned");
+  }
+  
+  console.log("[Supabase] User synced:", user.email);
 }
