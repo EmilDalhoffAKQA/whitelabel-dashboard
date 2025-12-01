@@ -61,18 +61,23 @@ export async function GET(req: NextRequest) {
     // Try to sync to Supabase, but don't fail auth if it doesn't work
     try {
       await syncUserToSupabase(userInfo);
-      console.log("[Callback] User synced to Supabase successfully");
     } catch (syncError) {
-      console.error("[Callback] Failed to sync to Supabase (non-fatal):", syncError);
+      console.error(
+        "[Callback] Failed to sync to Supabase (non-fatal):",
+        syncError
+      );
       // Continue anyway - don't block authentication
     }
 
     // Determine the correct hostname to redirect to
     const hostname = req.headers.get("host") || "";
-    const protocol = req.headers.get("x-forwarded-proto") || req.nextUrl.protocol.replace(":", "");
-    const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1");
+    const protocol =
+      req.headers.get("x-forwarded-proto") ||
+      req.nextUrl.protocol.replace(":", "");
+    const isLocalhost =
+      hostname.includes("localhost") || hostname.includes("127.0.0.1");
     const isSecure = protocol === "https";
-    
+
     const baseUrl = isLocalhost
       ? `http://${hostname}`
       : `https://www.emildalhoff.dk`; // Always redirect to www in production
@@ -82,17 +87,6 @@ export async function GET(req: NextRequest) {
     // Only set secure flag if we're actually using HTTPS
     const shouldBeSecure = isSecure && !isLocalhost;
     const cookieDomain = isLocalhost ? undefined : ".emildalhoff.dk";
-
-    console.log("[Callback] Setting cookies:", {
-      hostname,
-      protocol,
-      isLocalhost,
-      isSecure,
-      shouldBeSecure,
-      cookieDomain,
-      redirectTo: `${baseUrl}/workspaces`,
-      idToken: tokens.id_token ? "present" : "missing"
-    });
 
     // Set auth token cookie
     response.cookies.set("auth_token", tokens.id_token, {
@@ -113,8 +107,6 @@ export async function GET(req: NextRequest) {
       path: "/",
       domain: cookieDomain,
     });
-    
-    console.log("[Callback] Response cookies set:", response.cookies.getAll().map(c => c.name));
 
     return response;
   } catch (error) {
@@ -128,7 +120,9 @@ export async function GET(req: NextRequest) {
 async function syncUserToSupabase(auth0User: any) {
   const client = supabaseAdmin;
   if (!client) {
-    console.warn("[Supabase] Admin client not initialized - skipping user sync");
+    console.warn(
+      "[Supabase] Admin client not initialized - skipping user sync"
+    );
     return; // Don't throw, just return
   }
 
@@ -149,10 +143,10 @@ async function syncUserToSupabase(auth0User: any) {
     console.error("[Supabase] Error syncing user:", userError);
     throw new Error(`Failed to sync user: ${userError.message}`);
   }
-  
+
   if (!user) {
     throw new Error("Failed to sync user: No user returned");
   }
-  
+
   console.log("[Supabase] User synced:", user.email);
 }
