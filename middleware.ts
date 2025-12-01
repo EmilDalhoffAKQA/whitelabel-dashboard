@@ -22,7 +22,9 @@ export function middleware(request: NextRequest) {
 
   // Allow public routes without token check
   const publicRoutes = ["/login", "/welcome", "/onboarding", "/link-workspace"];
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+  const isPublicRoute = publicRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
 
   // Check auth FIRST before doing www redirect
   // Protect all /[workspaceId]/* routes and /workspaces
