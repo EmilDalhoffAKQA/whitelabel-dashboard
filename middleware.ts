@@ -11,8 +11,12 @@ export function middleware(request: NextRequest) {
   const isProtectedRoute =
     /^\/[^/]+\//.test(pathname) || pathname.startsWith("/workspaces");
 
+  // Allow access if coming from auth callback (referer check)
+  const referer = request.headers.get("referer") || "";
+  const isFromAuthCallback = referer.includes("/api/auth/callback");
+
   // Redirect to login if accessing protected route without token
-  if (!token && isProtectedRoute) {
+  if (!token && isProtectedRoute && !isFromAuthCallback) {
     const loginUrl = new URL("/login", request.url);
     // Preserve www in the redirect
     if (hostname.startsWith("www.")) {
