@@ -36,6 +36,16 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Redirect root path to workspaces if has token
+  if (pathname === "/" && token) {
+    const workspacesUrl = new URL("/workspaces", request.url);
+    if (hostname.startsWith("www.")) {
+      workspacesUrl.host = hostname;
+    }
+    console.log("[Middleware] Redirecting root to workspaces - has token");
+    return NextResponse.redirect(workspacesUrl);
+  }
+
   // Check auth FIRST before doing www redirect
   // Protect all /[workspaceId]/* routes and /workspaces
   const isProtectedRoute =
@@ -56,14 +66,20 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect to workspaces if accessing public routes with valid token
-  if (token && isPublicRoute) {
+  // Redirect to workspaces if accessing public routes with valid token (except login during logout)
+  if (token && isPublicRoute && pathname !== "/login") {
     const workspacesUrl = new URL("/workspaces", request.url);
     // Preserve www in the redirect
     if (hostname.startsWith("www.")) {
       workspacesUrl.host = hostname;
     }
     return NextResponse.redirect(workspacesUrl);
+  }
+  
+  // Allow /login with token (for logout flow)
+  if (token && pathname === "/login") {
+    // Let it through - cookies will be cleared
+    return NextResponse.next();
   }
 
   // Redirect non-www to www AFTER auth checks, but EXCLUDE API routes
