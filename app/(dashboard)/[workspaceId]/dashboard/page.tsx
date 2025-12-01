@@ -563,7 +563,7 @@ export default function DashboardPage() {
       )}
 
       <style jsx global>{`
-      /* Mobile widget styles: ensure chart widgets have space to render
+        /* Mobile widget styles: ensure chart widgets have space to render
         - override child .h-full so cards don't collapse when parent has no height
         - provide a modest min-height so Recharts' ResponsiveContainer has room */
         .widget-container-mobile {

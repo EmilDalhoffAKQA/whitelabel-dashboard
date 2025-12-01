@@ -9,7 +9,9 @@ interface ResponseTimeTrendWidgetProps {
   primaryColor?: string;
 }
 
-export function ResponseTimeTrendWidget({ primaryColor = "#3b82f6" }: ResponseTimeTrendWidgetProps) {
+export function ResponseTimeTrendWidget({
+  primaryColor = "#3b82f6",
+}: ResponseTimeTrendWidgetProps) {
   const isMobile = useIsMobile();
   const data = [
     { value: 3.2 },
@@ -48,7 +50,10 @@ export function ResponseTimeTrendWidget({ primaryColor = "#3b82f6" }: ResponseTi
       </div>
       <div className="flex-1 min-h-0 -mx-4 -mb-4">
         <ResponsiveContainer width="100%" height={isMobile ? 140 : "100%"}>
-          <LineChart data={data} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+          <LineChart
+            data={data}
+            margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
+          >
             <Line
               type="monotone"
               dataKey="value"
