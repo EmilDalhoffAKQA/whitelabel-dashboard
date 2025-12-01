@@ -2,7 +2,16 @@
 "use client";
 import * as React from "react";
 import { usePathname } from "next/navigation";
-import { Home, UserRoundPlus, Brush, Cog, Earth, Menu, X, LogOut } from "lucide-react";
+import {
+  Home,
+  UserRoundPlus,
+  Brush,
+  Cog,
+  Earth,
+  Menu,
+  X,
+  LogOut,
+} from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
