@@ -262,7 +262,7 @@ export default function OnboardingPage() {
                   <Button
                     onClick={handleSubmit}
                     className="flex-1 text-white"
-                    style={{ 
+                    style={{
                       backgroundColor: formData.primaryColor,
                     }}
                     disabled={!canProceedStep2 || loading}
