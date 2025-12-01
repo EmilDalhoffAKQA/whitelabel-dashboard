@@ -186,6 +186,7 @@ export async function POST(req: NextRequest) {
           to: body.adminEmail,
           name: body.adminName,
           inviteLink,
+          workspaceName: workspace.name,
         });
         console.log("Email sent successfully:", result);
       } catch (emailError) {
