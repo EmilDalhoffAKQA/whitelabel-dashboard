@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "emildalhoff.dk"
+        }
+      ],
+      "destination": "https://www.emildalhoff.dk/:path*",
+      "permanent": true
+    }
+  ]
+}
