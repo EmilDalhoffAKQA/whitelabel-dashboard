@@ -1,3 +1,4 @@
+// app/(dashboard)/[workspaceId]/dashboard/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -14,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { getWidgetComponent } from "@/components/widgets";
 import GridLayout, { Layout, WidthProvider } from "react-grid-layout";
 import {
@@ -24,6 +26,7 @@ import {
 } from "@/lib/grid-utils";
 import { syncWorkspaceWidgets } from "@/lib/sync-widgets";
 import { SquarePen, Save, X, Plus } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
@@ -36,21 +39,41 @@ export default function DashboardPage() {
     []
   );
   const [layout, setLayout] = useState<Layout[]>([]);
-  const [originalLayout, setOriginalLayout] = useState<Layout[]>([]); // Track layout before drag
+  const [originalLayout, setOriginalLayout] = useState<Layout[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const params = useParams();
   const workspaceId = params?.workspaceId as string;
+  const isMobile = useIsMobile();
+  const [rowHeight, setRowHeight] = useState<number>(GRID_CONFIG.rowHeight);
 
   useEffect(() => {
     loadDashboard();
   }, [workspaceId]);
 
+  // Adjust rowHeight responsively so medium/tablet view shows more widgets
+  useEffect(() => {
+    function updateRowHeight() {
+      const w = window.innerWidth;
+      // mobile uses stacked layout, tablets/small desktops use a smaller row height
+      if (w < 1024 && w >= 768) {
+        setRowHeight(120); // medium/tablet: reduce height to fit more
+      } else if (w < 768) {
+        setRowHeight(100); // small screens (shouldn't reach here for grid but keep safe)
+      } else {
+        setRowHeight(GRID_CONFIG.rowHeight);
+      }
+    }
+
+    updateRowHeight();
+    window.addEventListener("resize", updateRowHeight);
+    return () => window.removeEventListener("resize", updateRowHeight);
+  }, []);
+
   const loadDashboard = async () => {
     try {
-      // Fetch workspace data from Supabase
       const { data: workspaceData, error: workspaceError } = await supabase
         .from("workspaces")
         .select("*")
@@ -63,11 +86,8 @@ export default function DashboardPage() {
       }
 
       setWorkspace(workspaceData);
-
-      // Sync widgets to ensure new widgets are added
       await syncWorkspaceWidgets(parseInt(workspaceId));
 
-      // Fetch widget layouts for this workspace
       const { data: widgetsData, error: widgetsError } = await supabase
         .from("workspace_widget_layouts")
         .select(
@@ -79,10 +99,7 @@ export default function DashboardPage() {
         .eq("workspace_id", workspaceId)
         .order("y_position", { ascending: true });
 
-      if (widgetsError) {
-        console.error("Widgets error:", widgetsError);
-      } else {
-        // Separate visible and hidden widgets
+      if (!widgetsError && widgetsData) {
         const visible = widgetsData?.filter((w) => w.is_visible) || [];
         const hidden = widgetsData?.filter((w) => !w.is_visible) || [];
 
@@ -99,9 +116,7 @@ export default function DashboardPage() {
   };
 
   const handleDragStart = () => {
-    // Save current layout before drag starts
     setOriginalLayout([...layout]);
-    console.log("🎯 Drag started, saved layout:", layout);
   };
 
   const handleDragStop = (
@@ -111,37 +126,20 @@ export default function DashboardPage() {
   ) => {
     if (!isEditMode) return;
 
-    console.log("🛑 Drag stopped");
-    console.log("Old item:", oldItem);
-    console.log("New item:", newItem);
-    console.log("Original layout:", originalLayout);
-
-    // Apply smart snapping based on widget width
     const snappedX = snapToGrid(newItem.x, newItem.w);
-
-    // Ensure widget doesn't go beyond right edge
     const maxX = GRID_CONFIG.cols - newItem.w;
     const constrainedX = Math.max(0, Math.min(snappedX, maxX));
     const constrainedY = Math.max(0, newItem.y);
 
-    console.log(`📍 Snapped position: (${constrainedX}, ${constrainedY})`);
-
-    // Find ALL overlapping widgets
     const overlappingItems = originalLayout.filter((item) => {
       if (item.i === newItem.i) return false;
-
-      // Check if the new position overlaps with this item's position
       const xOverlap =
         constrainedX < item.x + item.w && constrainedX + newItem.w > item.x;
       const yOverlap =
         constrainedY < item.y + item.h && constrainedY + newItem.h > item.y;
-
       return xOverlap && yOverlap;
     });
 
-    console.log(`💥 Found ${overlappingItems.length} overlapping widgets`);
-
-    // Find the closest overlapping widget (by center point distance)
     let overlappingItem = null;
     if (overlappingItems.length > 0) {
       const draggedCenterX = constrainedX + newItem.w / 2;
@@ -150,47 +148,29 @@ export default function DashboardPage() {
       overlappingItem = overlappingItems.reduce((closest, item) => {
         const itemCenterX = item.x + item.w / 2;
         const itemCenterY = item.y + item.h / 2;
-
         const distance = Math.sqrt(
           Math.pow(draggedCenterX - itemCenterX, 2) +
             Math.pow(draggedCenterY - itemCenterY, 2)
         );
-
         const closestCenterX = closest.x + closest.w / 2;
         const closestCenterY = closest.y + closest.h / 2;
         const closestDistance = Math.sqrt(
           Math.pow(draggedCenterX - closestCenterX, 2) +
             Math.pow(draggedCenterY - closestCenterY, 2)
         );
-
         return distance < closestDistance ? item : closest;
       });
 
-      console.log(`🎯 Closest widget to swap with: ${overlappingItem.i}`, {
-        draggedWidget: `(${constrainedX}, ${constrainedY}) size ${newItem.w}x${newItem.h}`,
-        targetWidget: `(${overlappingItem.x}, ${overlappingItem.y}) size ${overlappingItem.w}x${overlappingItem.h}`,
-      });
-
-      // Check if widgets have the same width - only swap if they do
       const originalDraggedItem = originalLayout.find((i) => i.i === newItem.i);
       if (originalDraggedItem && originalDraggedItem.w !== overlappingItem.w) {
-        console.log(
-          `⚠️ Different widths detected (${originalDraggedItem.w} vs ${overlappingItem.w}) - cannot swap, will just place`
-        );
-        overlappingItem = null; // Don't swap if widths are different
+        overlappingItem = null;
       }
     }
 
-    // Create new layout with swap or snap
     let newLayout;
-
     if (overlappingItem) {
-      // SWAP: Both widgets exchange positions (only if same width)
       newLayout = originalLayout.map((item) => {
         if (item.i === newItem.i) {
-          console.log(
-            `🔄 SWAPPING: ${newItem.i} → (${overlappingItem.x}, ${overlappingItem.y})`
-          );
           return {
             ...item,
             x: overlappingItem.x,
@@ -201,9 +181,6 @@ export default function DashboardPage() {
         } else if (item.i === overlappingItem.i) {
           const originalDraggedItem = originalLayout.find(
             (i) => i.i === newItem.i
-          );
-          console.log(
-            `� SWAPPING: ${item.i} → (${originalDraggedItem?.x}, ${originalDraggedItem?.y})`
           );
           return {
             ...item,
@@ -216,29 +193,18 @@ export default function DashboardPage() {
         return item;
       });
     } else {
-      // NO SWAP: Use react-grid-layout's automatic collision prevention
-      console.log(`📌 NO SWAP: Using automatic layout with preventCollision`);
-
-      // Just apply snapping and let react-grid-layout handle the rest
       newLayout = currentLayout.map((item) => {
         if (item.i === newItem.i) {
-          // Apply snapping to the dragged item
-          return {
-            ...item,
-            x: constrainedX,
-            y: constrainedY,
-          };
+          return { ...item, x: constrainedX, y: constrainedY };
         }
         return item;
       });
     }
 
-    console.log("✅ Final layout:", newLayout);
     setLayout(newLayout);
   };
 
   const handleLayoutChange = (newLayout: Layout[]) => {
-    // Only update layout in non-edit mode or for initial load
     if (!isEditMode) {
       setLayout(newLayout);
     }
@@ -248,7 +214,6 @@ export default function DashboardPage() {
     setIsSaving(true);
     try {
       const updates = layoutToUpdates(layout);
-
       const response = await fetch("/api/widgets/layout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -259,8 +224,6 @@ export default function DashboardPage() {
       });
 
       if (!response.ok) throw new Error("Failed to save layout");
-
-      // Reload to get fresh data
       await loadDashboard();
       setIsEditMode(false);
     } catch (error) {
@@ -272,7 +235,6 @@ export default function DashboardPage() {
   };
 
   const handleCancelEdit = () => {
-    // Reset layout to original
     setLayout(widgetsToLayout(widgets));
     setIsEditMode(false);
   };
@@ -323,7 +285,7 @@ export default function DashboardPage() {
         <div
           className="animate-spin rounded-full h-12 w-12 border-b-2"
           style={{ borderBottomColor: primaryColor }}
-        ></div>
+        />
       </div>
     );
   }
@@ -338,32 +300,28 @@ export default function DashboardPage() {
           <p className="text-gray-600 mb-4">
             The workspace you're looking for doesn't exist.
           </p>
-          <button
-            onClick={() => router.push("/workspaces")}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
+          <Button onClick={() => router.push("/workspaces")}>
             Go to Workspaces
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header with Edit Controls */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+    <div className="space-y-4 md:space-y-6 px-4 md:px-0">
+      {/* Mobile-optimized Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">
             {workspace.name} Dashboard
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-sm md:text-base text-gray-600 mt-1">
             Monitor your workspace performance and analytics
           </p>
         </div>
 
-        {/* Edit Mode Toggle */}
-        <div className="flex gap-2">
+        <div className="hidden sm:flex gap-2 flex-shrink-0">
           {!isEditMode ? (
             <Button
               onClick={() => setIsEditMode(true)}
@@ -372,7 +330,7 @@ export default function DashboardPage() {
               className="gap-2 bg-white border border-gray-200 hover:bg-gray-50"
             >
               <SquarePen className="h-4 w-4" />
-              Edit layout
+              <span className="hidden md:inline">Edit layout</span>
             </Button>
           ) : (
             <>
@@ -382,11 +340,10 @@ export default function DashboardPage() {
                 size="default"
                 className="gap-2 bg-red-500 border border-gray-200  hover:bg-gray-50 text-white"
               >
-                <X className="h-4 w-4 text-white" />
+                <X className="h-4 w-4" />
                 Cancel
               </Button>
 
-              {/* Add Widget Dropdown */}
               {hiddenWidgets.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -399,17 +356,13 @@ export default function DashboardPage() {
                       Add Widget
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="start"
-                    className="w-56 bg-white border-gray-200"
-                  >
+                  <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel>Available Widgets</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {hiddenWidgets.map((widget) => (
                       <DropdownMenuItem
                         key={widget.id}
                         onClick={() => handleAddWidget(widget.id)}
-                        className="cursor-pointer"
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         <span>{widget.widget_type?.display_name}</span>
@@ -427,130 +380,210 @@ export default function DashboardPage() {
                 className="gap-2 bg-white border border-gray-200 text-gray-900 hover:bg-gray-50"
               >
                 <Save className="h-4 w-4" />
-                {isSaving ? "Saving..." : "Save Layout"}
+                {isSaving ? "Saving..." : "Save"}
               </Button>
             </>
           )}
         </div>
+
+        {/* Mobile Edit Controls - Sheet */}
+        <div className="sm:hidden">
+          {!isEditMode ? (
+            <Button
+              onClick={() => setIsEditMode(true)}
+              variant="outline"
+              className="w-full gap-2 bg-white border border-gray-200 text-gray-900 hover:bg-gray-50"
+            >
+              <SquarePen className="h-4 w-4" />
+              Edit layout
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                onClick={handleCancelEdit}
+                variant="outline"
+                className="flex-1 gap-2 bg-red-500 border border-gray-200  hover:bg-gray-50 text-white"
+              >
+                <X className="h-4 w-4" />
+                Cancel
+              </Button>
+
+              {hiddenWidgets.length > 0 && (
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="flex-1 gap-2 bg-white border border-gray-200 text-gray-900 hover:bg-gray-50"
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="h-[80vh]">
+                    <div className="space-y-4 py-4">
+                      <h3 className="text-lg font-semibold">
+                        Available Widgets
+                      </h3>
+                      <div className="space-y-2">
+                        {hiddenWidgets.map((widget) => (
+                          <Button
+                            key={widget.id}
+                            onClick={() => handleAddWidget(widget.id)}
+                            variant="outline"
+                            className="w-full justify-start gap-2 bg-white border border-gray-200 text-gray-900 hover:bg-gray-50"
+                          >
+                            <Plus className="h-4 w-4" />
+                            {widget.widget_type?.display_name}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
+
+              <Button
+                onClick={handleSaveLayout}
+                disabled={isSaving}
+                variant="outline"
+                className="flex-1 gap-2 bg-white border border-gray-200 text-gray-900 hover:bg-gray-50"
+              >
+                <Save className="h-4 w-4" />
+                {isSaving ? "..." : "Save"}
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Widget Grid with React-Grid-Layout */}
+      {/* Widget Grid */}
       {widgets.length === 0 ? (
-        <div className="col-span-12 text-center py-12">
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-gray-500">
-                No widgets configured for this workspace.
-              </p>
-              <p className="text-sm text-gray-400 mt-2">
-                Enable widgets in settings to see them here.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardContent className="pt-6 text-center py-12">
+            <p className="text-gray-500">
+              No widgets configured for this workspace.
+            </p>
+            <p className="text-sm text-gray-400 mt-2">
+              Enable widgets in settings to see them here.
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         <div className={isEditMode ? "edit-mode" : ""}>
-          <ResponsiveGridLayout
-            className="layout"
-            layout={layout}
-            cols={GRID_CONFIG.cols}
-            rowHeight={GRID_CONFIG.rowHeight}
-            margin={GRID_CONFIG.margin}
-            containerPadding={GRID_CONFIG.containerPadding}
-            compactType="vertical"
-            preventCollision={false}
-            onLayoutChange={handleLayoutChange}
-            onDragStart={handleDragStart}
-            onDragStop={handleDragStop}
-            isDraggable={isEditMode}
-            isResizable={isEditMode}
-            draggableHandle=".drag-handle"
-          >
-            {widgets.map((widget) => {
-              const WidgetComponent = getWidgetComponent(
-                widget.widget_type?.component_name || ""
-              );
+          {isMobile ? (
+            // Mobile: Stack widgets vertically (no dragging)
+            <div className="space-y-4">
+              {widgets.map((widget) => {
+                const WidgetComponent = getWidgetComponent(
+                  widget.widget_type?.component_name || ""
+                );
 
-              if (!WidgetComponent || !widget.widget_type) {
-                return null;
-              }
+                if (!WidgetComponent || !widget.widget_type) return null;
 
-              return (
-                <div key={widget.id} className="widget-container">
-                  {/* Remove Button - minimal X icon (only visible in edit mode) */}
-                  {isEditMode && (
-                    <button
-                      onClick={() => handleRemoveWidget(widget.id)}
-                      className="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors group"
-                      title="Remove widget"
-                      aria-label="Remove widget"
-                    >
-                      <X className="h-4 w-4 text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-200" />
-                    </button>
-                  )}
-
-                  {/* Drag Handle (only visible in edit mode) */}
-                  {isEditMode && (
-                    <div
-                      className="drag-handle absolute top-0 left-0 right-0 h-8 cursor-move bg-blue-500/10 border-2 border-blue-500 border-dashed rounded-t-lg flex items-center justify-center z-10"
-                      style={{ borderColor: primaryColor }}
-                    >
-                      <span
-                        className="text-xs font-medium"
-                        style={{ color: primaryColor }}
+                return (
+                  <div key={widget.id} className="widget-container-mobile">
+                    {isEditMode && (
+                      <button
+                        onClick={() => handleRemoveWidget(widget.id)}
+                        className="absolute top-2 right-2 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-md hover:bg-gray-100 transition-colors"
+                        title="Remove widget"
                       >
-                        Drag to move
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Your existing widget - styling stays exactly the same! */}
-                  <div className={isEditMode ? "pt-8 h-full" : "h-full"}>
+                        <X className="h-4 w-4 text-gray-600" />
+                      </button>
+                    )}
                     <WidgetComponent
                       primaryColor={primaryColor}
                       {...({} as any)}
                     />
                   </div>
-                </div>
-              );
-            })}
-          </ResponsiveGridLayout>
-        </div>
-      )}
+                );
+              })}
+            </div>
+          ) : (
+            // Desktop/Tablet: Use grid layout
+            <ResponsiveGridLayout
+              className="layout"
+              layout={layout}
+              cols={GRID_CONFIG.cols}
+              rowHeight={rowHeight}
+              margin={GRID_CONFIG.margin}
+              containerPadding={GRID_CONFIG.containerPadding}
+              compactType="vertical"
+              preventCollision={false}
+              onLayoutChange={handleLayoutChange}
+              onDragStart={handleDragStart}
+              onDragStop={handleDragStop}
+              isDraggable={isEditMode}
+              isResizable={isEditMode}
+              draggableHandle=".drag-handle"
+            >
+              {widgets.map((widget) => {
+                const WidgetComponent = getWidgetComponent(
+                  widget.widget_type?.component_name || ""
+                );
 
-      {/* Add Widget Section (only visible in edit mode) */}
-      {isEditMode && hiddenWidgets.length > 0 && (
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Add Widgets
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {hiddenWidgets.map((widget) => (
-              <Card
-                key={widget.id}
-                className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-gray-300 hover:border-gray-400"
-                onClick={() => handleAddWidget(widget.id)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900 text-sm">
-                        {widget.widget_type?.display_name}
-                      </h4>
-                      <p className="text-xs text-gray-500 mt-1">Click to add</p>
-                    </div>
-                    <div className="ml-3 bg-primary/10 text-primary rounded-full p-2">
-                      <Plus className="h-4 w-4" />
+                if (!WidgetComponent || !widget.widget_type) return null;
+
+                return (
+                  <div key={widget.id} className="widget-container">
+                    {isEditMode && (
+                      <>
+                        <button
+                          onClick={() => handleRemoveWidget(widget.id)}
+                          className="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200 transition-colors"
+                          title="Remove widget"
+                        >
+                          <X className="h-4 w-4 text-gray-500" />
+                        </button>
+                        <div
+                          className="drag-handle absolute top-0 left-0 right-0 h-8 cursor-move bg-blue-500/10 border-2 border-blue-500 border-dashed rounded-t-lg flex items-center justify-center z-10"
+                          style={{ borderColor: primaryColor }}
+                        >
+                          <span
+                            className="text-xs font-medium"
+                            style={{ color: primaryColor }}
+                          >
+                            Drag to move
+                          </span>
+                        </div>
+                      </>
+                    )}
+                    <div className={isEditMode ? "pt-8 h-full" : "h-full"}>
+                      <WidgetComponent
+                        primaryColor={primaryColor}
+                        {...({} as any)}
+                      />
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                );
+              })}
+            </ResponsiveGridLayout>
+          )}
         </div>
       )}
 
       <style jsx global>{`
+      /* Mobile widget styles: ensure chart widgets have space to render
+        - override child .h-full so cards don't collapse when parent has no height
+        - provide a modest min-height so Recharts' ResponsiveContainer has room */
+        .widget-container-mobile {
+          position: relative;
+          min-height: 0;
+        }
+
+        /* When stacked on mobile, allow the inner card to size to content and give charts room */
+        .widget-container-mobile > * {
+          height: auto !important;
+          min-height: 140px; /* small sensible height for chart widgets on mobile */
+        }
+
+        /* Ensure the card content area (where charts mount) has a min-height so
+           ResponsiveContainer with height=\"100%\" can calculate sizes reliably */
+        .widget-container-mobile [data-slot="card-content"] {
+          min-height: 120px;
+          height: auto !important;
+        }
+        /* Desktop/Tablet grid styles */
         .react-grid-layout {
           position: relative;
         }
@@ -590,13 +623,11 @@ export default function DashboardPage() {
           min-height: 0;
         }
 
-        /* Ensure widget cards take full height */
         .widget-container .h-full,
         .widget-container > div > * {
           height: 100%;
         }
 
-        /* Edit mode visual indicator */
         .edit-mode .react-grid-item {
           border: 2px dashed transparent;
           border-radius: 0.5rem;
@@ -660,6 +691,21 @@ export default function DashboardPage() {
 
         .edit-mode .react-grid-item:hover .drag-handle {
           opacity: 1;
+        }
+
+        /* Tablet adjustments */
+        @media (min-width: 768px) and (max-width: 1024px) {
+          .react-grid-layout {
+            margin: 0 -8px;
+          }
+        }
+
+        /* Mobile: hide grid visuals */
+        @media (max-width: 767px) {
+          .react-grid-layout::before,
+          .react-grid-layout::after {
+            display: none;
+          }
         }
       `}</style>
     </div>

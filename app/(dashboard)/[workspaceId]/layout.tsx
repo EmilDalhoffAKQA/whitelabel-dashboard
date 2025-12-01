@@ -1,17 +1,15 @@
+// app/(dashboard)/[workspaceId]/layout.tsx
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
 import { AppSidebar } from "@/components/ui/dashboard/Sidebar";
-import { Metadata } from "next";
 
 async function getWorkspaceData(workspaceId: string, userEmail: string) {
-  // Ensure we're on server-side with admin access
   if (!supabaseAdmin) {
     console.error("Supabase admin client not available");
     return null;
   }
 
-  // First get the user
   const { data: user, error: userError } = await supabaseAdmin
     .from("users")
     .select("id")
@@ -23,7 +21,6 @@ async function getWorkspaceData(workspaceId: string, userEmail: string) {
     return null;
   }
 
-  // Then get the user_workspace relationship
   const { data: userWorkspace, error: uwError } = await supabaseAdmin
     .from("user_workspaces")
     .select("role, workspace_id")
@@ -36,7 +33,6 @@ async function getWorkspaceData(workspaceId: string, userEmail: string) {
     return null;
   }
 
-  // Then get the full workspace data separately
   const { data: workspace, error: wsError } = await supabaseAdmin
     .from("workspaces")
     .select("*")
@@ -47,9 +43,6 @@ async function getWorkspaceData(workspaceId: string, userEmail: string) {
     console.error("Workspace error:", wsError);
     return null;
   }
-
-  console.log("Workspace data:", workspace);
-  console.log("Theme config:", workspace.theme_config);
 
   return {
     workspace,
@@ -80,18 +73,15 @@ export default async function WorkspaceLayout({
     redirect("/workspaces");
   }
 
-  // Read sidebar state from cookie (default to false if not set)
   const sidebarOpen = sidebarStateCookie
     ? sidebarStateCookie.value === "true"
     : false;
 
-  // Build user and navItems for Sidebar
   const user = {
     name: userInfo.name || userInfo.email,
     avatarUrl: userInfo.picture || undefined,
   };
 
-  // Define nav items with allowed roles
   const navItems = [
     {
       href: `/${workspaceId}/dashboard`,
@@ -115,12 +105,10 @@ export default async function WorkspaceLayout({
     },
   ];
 
-  // Only show nav items allowed for the user's role
   const filteredNavItems = navItems.filter((item) =>
     item.roles.includes(data.role)
   );
 
-  // Extract workspace theme config with proper typing
   const themeConfig = data.workspace.theme_config;
   const theme = {
     primaryColor: themeConfig?.primaryColor || "#2563eb",
@@ -133,11 +121,8 @@ export default async function WorkspaceLayout({
       "",
   };
 
-  console.log("Applied theme:", theme);
-
   return (
     <>
-      {/* Dynamic Favicon */}
       {theme.favicon && (
         <head>
           <link rel="icon" href={theme.favicon} type="image/x-icon" />
@@ -147,16 +132,33 @@ export default async function WorkspaceLayout({
       )}
 
       <div
-        className="flex w-full h-screen gap-4 p-4"
+        className="flex w-full min-h-screen md:h-screen gap-0 md:gap-4 p-0 md:p-4"
         style={{ backgroundColor: theme.pageBackgroundColor }}
       >
-        <AppSidebar
-          user={user}
-          navItems={filteredNavItems}
-          primaryColor={theme.primaryColor}
-          logo={theme.logo}
-        />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        {/* Sidebar - Hidden on mobile, shown on tablet+ */}
+        <div className="hidden md:block flex-shrink-0">
+          <AppSidebar
+            user={user}
+            navItems={filteredNavItems}
+            primaryColor={theme.primaryColor}
+            logo={theme.logo}
+          />
+        </div>
+
+        {/* Mobile Sidebar - Sheet overlay */}
+        <div className="md:hidden">
+          <AppSidebar
+            user={user}
+            navItems={filteredNavItems}
+            primaryColor={theme.primaryColor}
+            logo={theme.logo}
+          />
+        </div>
+
+        {/* Main Content - Full width on mobile, flex-1 on desktop */}
+        <main className="flex-1 w-full overflow-y-auto px-4 py-6 md:px-0 md:py-0">
+          {children}
+        </main>
       </div>
     </>
   );

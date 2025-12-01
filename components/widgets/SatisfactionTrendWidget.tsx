@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SatisfactionTrendWidgetProps {
   primaryColor?: string;
@@ -10,6 +11,7 @@ interface SatisfactionTrendWidgetProps {
 export function SatisfactionTrendWidget({
   primaryColor = "#3b82f6",
 }: SatisfactionTrendWidgetProps) {
+  const isMobile = useIsMobile();
   const data = [
     { value: 82 },
     { value: 85 },
@@ -36,7 +38,7 @@ export function SatisfactionTrendWidget({
         </div>
       </div>
       <div className="flex-1 min-h-0 -mx-4 -mb-4">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={isMobile ? 140 : "100%"}>
           <AreaChart
             data={data}
             margin={{ top: 5, right: 0, left: 0, bottom: 0 }}

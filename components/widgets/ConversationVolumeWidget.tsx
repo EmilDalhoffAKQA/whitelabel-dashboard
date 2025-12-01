@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ConversationVolumeWidgetProps {
   primaryColor?: string;
@@ -21,6 +22,7 @@ export function ConversationVolumeWidget({
   marketId,
   workspaceId,
 }: ConversationVolumeWidgetProps) {
+  const isMobile = useIsMobile();
   // Generate mock data for the last 7 days
   const generateMockData = () => {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -41,7 +43,7 @@ export function ConversationVolumeWidget({
         <p className="text-xs text-muted-foreground">Last 7 days</p>
       </CardHeader>
       <CardContent className="flex-1 min-h-0">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={isMobile ? 140 : "100%"}>
           <AreaChart data={data}>
             <defs>
               <linearGradient

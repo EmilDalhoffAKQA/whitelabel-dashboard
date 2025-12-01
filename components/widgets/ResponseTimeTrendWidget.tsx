@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Line, LineChart, ResponsiveContainer } from "recharts";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
 interface ResponseTimeTrendWidgetProps {
@@ -9,6 +10,7 @@ interface ResponseTimeTrendWidgetProps {
 }
 
 export function ResponseTimeTrendWidget({ primaryColor = "#3b82f6" }: ResponseTimeTrendWidgetProps) {
+  const isMobile = useIsMobile();
   const data = [
     { value: 3.2 },
     { value: 2.8 },
@@ -45,7 +47,7 @@ export function ResponseTimeTrendWidget({ primaryColor = "#3b82f6" }: ResponseTi
         </div>
       </div>
       <div className="flex-1 min-h-0 -mx-4 -mb-4">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={isMobile ? 140 : "100%"}>
           <LineChart data={data} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
             <Line
               type="monotone"

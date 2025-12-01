@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface PeakHoursWidgetProps {
   primaryColor?: string;
@@ -17,6 +18,7 @@ interface PeakHoursWidgetProps {
 export function PeakHoursWidget({
   primaryColor = "#3b82f6",
 }: PeakHoursWidgetProps) {
+  const isMobile = useIsMobile();
   const data = [
     { hour: "9AM", conversations: 45 },
     { hour: "10AM", conversations: 78 },
@@ -35,7 +37,7 @@ export function PeakHoursWidget({
         <p className="text-xs text-muted-foreground">Today's activity</p>
       </CardHeader>
       <CardContent className="flex-1 min-h-0">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={isMobile ? 140 : "100%"}>
           <BarChart data={data}>
             <XAxis
               dataKey="hour"

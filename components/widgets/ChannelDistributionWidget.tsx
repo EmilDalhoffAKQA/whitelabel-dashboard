@@ -9,6 +9,7 @@ import {
   Legend,
   Tooltip,
 } from "recharts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ChannelDistributionWidgetProps {
   primaryColor?: string;
@@ -17,6 +18,7 @@ interface ChannelDistributionWidgetProps {
 export function ChannelDistributionWidget({
   primaryColor = "#3b82f6",
 }: ChannelDistributionWidgetProps) {
+  const isMobile = useIsMobile();
   const data = [
     { name: "Chat", value: 45, color: primaryColor },
     { name: "Email", value: 30, color: "#8b5cf6" },
@@ -33,7 +35,7 @@ export function ChannelDistributionWidget({
         <p className="text-xs text-muted-foreground">This month</p>
       </CardHeader>
       <CardContent className="flex-1 min-h-0">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={isMobile ? 140 : "100%"}>
           <PieChart>
             <Pie
               data={data}

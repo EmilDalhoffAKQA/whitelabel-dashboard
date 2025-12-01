@@ -9,6 +9,7 @@ import {
   Legend,
   Tooltip,
 } from "recharts";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CustomerSentimentWidgetProps {
   primaryColor?: string;
@@ -21,6 +22,7 @@ export function CustomerSentimentWidget({
   marketId,
   workspaceId,
 }: CustomerSentimentWidgetProps) {
+  const isMobile = useIsMobile();
   const data = [
     { name: "Positive", value: 65, color: primaryColor },
     { name: "Neutral", value: 25, color: "#6b7280" },
@@ -36,7 +38,7 @@ export function CustomerSentimentWidget({
         <p className="text-xs text-muted-foreground">Last 30 days</p>
       </CardHeader>
       <CardContent className="flex-1 min-h-0">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height={isMobile ? 140 : "100%"}>
           <PieChart>
             <Pie
               data={data}
