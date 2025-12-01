@@ -4,20 +4,39 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
   const pathname = request.nextUrl.pathname;
+  
+  // Skip middleware for API routes entirely to avoid interfering with auth flow
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+  
   const token = request.cookies.get("auth_token");
+
+  // Debug logging
+  console.log("[Middleware]", {
+    pathname,
+    hostname,
+    hasToken: !!token,
+    cookies: request.cookies.getAll().map(c => c.name),
+  });
 
   // Check auth FIRST before doing www redirect
   // Protect all /[workspaceId]/* routes and /workspaces
   const isProtectedRoute =
     /^\/[^/]+\//.test(pathname) || pathname.startsWith("/workspaces");
 
+  // Allow access if coming from auth callback (referer check)
+  const referer = request.headers.get("referer") || "";
+  const isFromAuthCallback = referer.includes("/api/auth/callback");
+
   // Redirect to login if accessing protected route without token
-  if (!token && isProtectedRoute) {
+  if (!token && isProtectedRoute && !isFromAuthCallback) {
     const loginUrl = new URL("/login", request.url);
     // Preserve www in the redirect
     if (hostname.startsWith("www.")) {
       loginUrl.host = hostname;
     }
+    console.log("[Middleware] Redirecting to login - no token");
     return NextResponse.redirect(loginUrl);
   }
 

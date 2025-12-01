@@ -62,32 +62,52 @@ export async function GET(req: NextRequest) {
 
     // Determine the correct hostname to redirect to
     const hostname = req.headers.get("host") || "";
-    const baseUrl = hostname.includes("localhost")
+    const protocol = req.headers.get("x-forwarded-proto") || req.nextUrl.protocol.replace(":", "");
+    const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1");
+    const isSecure = protocol === "https";
+    
+    const baseUrl = isLocalhost
       ? `http://${hostname}`
       : `https://www.emildalhoff.dk`; // Always redirect to www in production
 
     const response = NextResponse.redirect(`${baseUrl}/workspaces`);
 
-    // Determine if we're in production based on hostname
-    const isProduction = !hostname.includes("localhost");
+    // Only set secure flag if we're actually using HTTPS
+    const shouldBeSecure = isSecure && !isLocalhost;
+    const cookieDomain = isLocalhost ? undefined : ".emildalhoff.dk";
 
+    console.log("[Callback] Setting cookies:", {
+      hostname,
+      protocol,
+      isLocalhost,
+      isSecure,
+      shouldBeSecure,
+      cookieDomain,
+      redirectTo: `${baseUrl}/workspaces`,
+      idToken: tokens.id_token ? "present" : "missing"
+    });
+
+    // Set auth token cookie
     response.cookies.set("auth_token", tokens.id_token, {
       httpOnly: false,
-      secure: isProduction,
+      secure: shouldBeSecure,
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
-      domain: isProduction ? ".emildalhoff.dk" : undefined,
+      domain: cookieDomain,
     });
 
+    // Set user info cookie
     response.cookies.set("user_info", JSON.stringify(userInfo), {
       httpOnly: false,
-      secure: isProduction,
+      secure: shouldBeSecure,
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
-      domain: isProduction ? ".emildalhoff.dk" : undefined,
+      domain: cookieDomain,
     });
+    
+    console.log("[Callback] Response cookies set:", response.cookies.getAll().map(c => c.name));
 
     return response;
   } catch (error) {
