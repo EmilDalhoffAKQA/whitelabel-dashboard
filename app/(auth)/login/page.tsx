@@ -5,13 +5,15 @@ import { Suspense } from "react";
 function LoginPageInner() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    const baseUrl =
+      process.env.NEXT_PUBLIC_NEXTAUTH_URL || window.location.origin;
     const params = new URLSearchParams({
       client_id:
         process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID ||
         "ev0QQqC5UH9gZXLQslLRaWAEHX0qJRxE",
       response_type: "code",
       scope: "openid profile email",
-      redirect_uri: `${window.location.origin}/api/auth/callback`,
+      redirect_uri: `${baseUrl}/api/auth/callback`,
     });
     window.location.href = `https://${
       process.env.NEXT_PUBLIC_AUTH0_DOMAIN ||
