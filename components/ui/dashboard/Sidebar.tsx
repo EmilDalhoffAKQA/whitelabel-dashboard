@@ -86,9 +86,9 @@ export function AppSidebar({
                 key={item.href}
                 href={item.href}
                 onClick={() => isMobile && setOpen(false)}
-                className={`w-10 h-10 md:w-10 md:h-10 rounded-2xl flex items-center justify-center transition-all ${
+                className={`w-12 h-12 md:w-12 md:h-12 rounded-2xl flex items-center justify-center transition-all ${
                   isActive
-                    ? "text-white shadow-lg scale-110"
+                    ? "text-white shadow-lg scale-105"
                     : "text-gray-600 bg-transparent hover:bg-gray-100/50 hover:scale-105"
                 }`}
                 style={isActive ? { backgroundColor: primaryColor } : {}}
@@ -109,7 +109,16 @@ export function AppSidebar({
             }/dashboard-settings`;
             if (isMobile) setOpen(false);
           }}
-          className="w-10 h-10 rounded-2xl flex items-center justify-center text-gray-600 bg-transparent hover:bg-gray-100/50 transition-colors"
+          className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+            pathname.includes("/dashboard-settings")
+              ? "text-white shadow-lg scale-105"
+              : "text-gray-600 bg-transparent hover:bg-gray-100/50 hover:scale-105"
+          }`}
+          style={
+            pathname.includes("/dashboard-settings")
+              ? { backgroundColor: primaryColor }
+              : {}
+          }
           title="Dashboard Settings"
         >
           <Cog className="w-5 h-5" strokeWidth={2} />
@@ -119,7 +128,7 @@ export function AppSidebar({
           onClick={() => {
             window.location.href = "/api/auth/logout";
           }}
-          className="w-10 h-10 rounded-2xl flex items-center justify-center text-gray-600 bg-transparent hover:bg-gray-100/50 transition-colors"
+          className="w-12 h-12 rounded-2xl flex items-center justify-center text-gray-600 bg-transparent hover:bg-gray-100/50 transition-all hover:scale-105"
           title="Logout"
         >
           <LogOut className="w-5 h-5" strokeWidth={2} />

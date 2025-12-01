@@ -161,7 +161,8 @@ export default function OnboardingPage() {
               <Button
                 onClick={() => setStep(2)}
                 disabled={!canProceedStep1}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                variant="blue"
+                className="w-full"
               >
                 Continue
               </Button>
@@ -251,7 +252,7 @@ export default function OnboardingPage() {
 
                 <div className="flex gap-2">
                   <Button
-                    variant="outline"
+                    variant="dashboard"
                     onClick={() => setStep(1)}
                     className="flex-1"
                     disabled={loading}
@@ -261,7 +262,9 @@ export default function OnboardingPage() {
                   <Button
                     onClick={handleSubmit}
                     className="flex-1 text-white"
-                    style={{ backgroundColor: formData.primaryColor }}
+                    style={{ 
+                      backgroundColor: formData.primaryColor,
+                    }}
                     disabled={!canProceedStep2 || loading}
                   >
                     {loading ? "Creating..." : "Create Workspace"}

@@ -325,9 +325,9 @@ export default function DashboardPage() {
           {!isEditMode ? (
             <Button
               onClick={() => setIsEditMode(true)}
-              variant="outline"
+              variant="dashboard"
               size="default"
-              className="gap-2 bg-white border border-gray-200 hover:bg-gray-50"
+              className="gap-2"
             >
               <SquarePen className="h-4 w-4" />
               <span className="hidden md:inline">Edit layout</span>
@@ -336,9 +336,9 @@ export default function DashboardPage() {
             <>
               <Button
                 onClick={handleCancelEdit}
-                variant="outline"
+                variant="cancel"
                 size="default"
-                className="gap-2 bg-red-500 border border-gray-200  hover:bg-gray-50 text-white"
+                className="gap-2"
               >
                 <X className="h-4 w-4" />
                 Cancel
@@ -348,9 +348,9 @@ export default function DashboardPage() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
-                      variant="outline"
+                      variant="dashboard"
                       size="default"
-                      className="gap-2 bg-white border border-gray-200 text-gray-900 hover:bg-gray-50"
+                      className="gap-2"
                     >
                       <Plus className="h-3 w-3" />
                       Add Widget
@@ -375,9 +375,9 @@ export default function DashboardPage() {
               <Button
                 onClick={handleSaveLayout}
                 disabled={isSaving}
-                variant="outline"
+                variant="dashboard"
                 size="default"
-                className="gap-2 bg-white border border-gray-200 text-gray-900 hover:bg-gray-50"
+                className="gap-2"
               >
                 <Save className="h-4 w-4" />
                 {isSaving ? "Saving..." : "Save"}
@@ -391,8 +391,8 @@ export default function DashboardPage() {
           {!isEditMode ? (
             <Button
               onClick={() => setIsEditMode(true)}
-              variant="outline"
-              className="w-full gap-2 bg-white border border-gray-200 text-gray-900 hover:bg-gray-50"
+              variant="dashboard"
+              className="w-full gap-2"
             >
               <SquarePen className="h-4 w-4" />
               Edit layout
@@ -401,8 +401,8 @@ export default function DashboardPage() {
             <div className="flex gap-2">
               <Button
                 onClick={handleCancelEdit}
-                variant="outline"
-                className="flex-1 gap-2 bg-red-500 border border-gray-200  hover:bg-gray-50 text-white"
+                variant="cancel"
+                className="flex-1 gap-2"
               >
                 <X className="h-4 w-4" />
                 Cancel
@@ -411,10 +411,7 @@ export default function DashboardPage() {
               {hiddenWidgets.length > 0 && (
                 <Sheet>
                   <SheetTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="flex-1 gap-2 bg-white border border-gray-200 text-gray-900 hover:bg-gray-50"
-                    >
+                    <Button variant="dashboard" className="flex-1 gap-2">
                       <Plus className="h-3 w-3" />
                       Add
                     </Button>
@@ -429,8 +426,8 @@ export default function DashboardPage() {
                           <Button
                             key={widget.id}
                             onClick={() => handleAddWidget(widget.id)}
-                            variant="outline"
-                            className="w-full justify-start gap-2 bg-white border border-gray-200 text-gray-900 hover:bg-gray-50"
+                            variant="dashboard"
+                            className="w-full justify-start gap-2"
                           >
                             <Plus className="h-4 w-4" />
                             {widget.widget_type?.display_name}
@@ -445,8 +442,8 @@ export default function DashboardPage() {
               <Button
                 onClick={handleSaveLayout}
                 disabled={isSaving}
-                variant="outline"
-                className="flex-1 gap-2 bg-white border border-gray-200 text-gray-900 hover:bg-gray-50"
+                variant="dashboard"
+                className="flex-1 gap-2"
               >
                 <Save className="h-4 w-4" />
                 {isSaving ? "..." : "Save"}
