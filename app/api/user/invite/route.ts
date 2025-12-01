@@ -104,6 +104,23 @@ export async function POST(req: NextRequest) {
         console.log("Auth0 password reset ticket generated:", inviteLink);
       }
 
+      // Fetch workspace name for the email
+      let workspaceName = "Your Company";
+      if (supabaseAdmin) {
+        try {
+          const { data: workspace } = await supabaseAdmin
+            .from("workspaces")
+            .select("name")
+            .eq("id", workspaceId)
+            .single();
+          if (workspace?.name) {
+            workspaceName = workspace.name;
+          }
+        } catch (wsErr) {
+          console.error("Failed to fetch workspace name:", wsErr);
+        }
+      }
+
       // Always send custom invite email using Mailjet, even if inviteLink is null
       try {
         const { sendInviteEmail } = await import("@/lib/mailjet");
@@ -111,6 +128,7 @@ export async function POST(req: NextRequest) {
           to: email,
           name,
           inviteLink: inviteLink || "",
+          workspaceName,
         });
         console.log("Custom invite email sent via Mailjet");
       } catch (mailErr) {

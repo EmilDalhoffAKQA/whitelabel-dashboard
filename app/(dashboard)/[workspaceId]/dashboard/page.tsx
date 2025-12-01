@@ -356,13 +356,19 @@ export default function DashboardPage() {
                       Add Widget
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Available Widgets</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-56 bg-white border-gray-200 shadow-sm"
+                  >
+                    <DropdownMenuLabel className="text-gray-900 font-semibold">
+                      Available Widgets
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-gray-200" />
                     {hiddenWidgets.map((widget) => (
                       <DropdownMenuItem
                         key={widget.id}
                         onClick={() => handleAddWidget(widget.id)}
+                        className="text-gray-900 hover:bg-gray-50 cursor-pointer"
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         <span>{widget.widget_type?.display_name}</span>
@@ -461,7 +467,7 @@ export default function DashboardPage() {
               No widgets configured for this workspace.
             </p>
             <p className="text-sm text-gray-400 mt-2">
-              Enable widgets in settings to see them here.
+              Learn about the widgets in settings.
             </p>
           </CardContent>
         </Card>

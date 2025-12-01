@@ -69,10 +69,8 @@ export default function WorkspacesPage() {
   }
 
   function handleLogout() {
-    document.cookie = "auth_token=; Max-Age=0; path=/";
-    document.cookie = "user_info=; Max-Age=0; path=/";
-    document.cookie = "current_workspace=; Max-Age=0; path=/";
-    router.push("/login");
+    // Call the logout API endpoint which properly handles Auth0 logout
+    window.location.href = "/api/auth/logout";
   }
 
   const getRoleBadgeColor = (role: string) => {

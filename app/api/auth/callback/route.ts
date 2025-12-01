@@ -61,6 +61,7 @@ export async function GET(req: NextRequest) {
     // Try to sync to Supabase, but don't fail auth if it doesn't work
     try {
       await syncUserToSupabase(userInfo);
+      console.log("[Callback] User synced to Supabase successfully");
     } catch (syncError) {
       console.error(
         "[Callback] Failed to sync to Supabase (non-fatal):",
@@ -88,6 +89,17 @@ export async function GET(req: NextRequest) {
     const shouldBeSecure = isSecure && !isLocalhost;
     const cookieDomain = isLocalhost ? undefined : ".emildalhoff.dk";
 
+    console.log("[Callback] Setting cookies:", {
+      hostname,
+      protocol,
+      isLocalhost,
+      isSecure,
+      shouldBeSecure,
+      cookieDomain,
+      redirectTo: `${baseUrl}/workspaces`,
+      idToken: tokens.id_token ? "present" : "missing",
+    });
+
     // Set auth token cookie
     response.cookies.set("auth_token", tokens.id_token, {
       httpOnly: false,
@@ -107,6 +119,11 @@ export async function GET(req: NextRequest) {
       path: "/",
       domain: cookieDomain,
     });
+
+    console.log(
+      "[Callback] Response cookies set:",
+      response.cookies.getAll().map((c) => c.name)
+    );
 
     return response;
   } catch (error) {
