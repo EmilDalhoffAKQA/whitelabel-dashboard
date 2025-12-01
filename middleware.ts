@@ -20,6 +20,10 @@ export function middleware(request: NextRequest) {
     cookies: request.cookies.getAll().map((c) => c.name),
   });
 
+  // Allow public routes without token check
+  const publicRoutes = ["/login", "/welcome", "/onboarding", "/link-workspace"];
+  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+
   // Check auth FIRST before doing www redirect
   // Protect all /[workspaceId]/* routes and /workspaces
   const isProtectedRoute =
@@ -40,8 +44,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect to workspaces if accessing login with token
-  if (token && pathname === "/login") {
+  // Redirect to workspaces if accessing public routes with valid token
+  if (token && isPublicRoute) {
     const workspacesUrl = new URL("/workspaces", request.url);
     // Preserve www in the redirect
     if (hostname.startsWith("www.")) {
