@@ -60,28 +60,33 @@ export async function GET(req: NextRequest) {
 
     await syncUserToSupabase(userInfo);
 
-    const response = NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}/workspaces` // workspace picker page
-    );
+    // Determine the correct hostname to redirect to
+    const hostname = req.headers.get("host") || "";
+    const baseUrl = hostname.includes("localhost")
+      ? `http://${hostname}`
+      : `https://www.emildalhoff.dk`; // Always redirect to www in production
+
+    const response = NextResponse.redirect(`${baseUrl}/workspaces`);
+
+    // Determine if we're in production based on hostname
+    const isProduction = !hostname.includes("localhost");
 
     response.cookies.set("auth_token", tokens.id_token, {
       httpOnly: false,
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction,
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
-      domain:
-        process.env.NODE_ENV === "production" ? ".emildalhoff.dk" : undefined,
+      domain: isProduction ? ".emildalhoff.dk" : undefined,
     });
 
     response.cookies.set("user_info", JSON.stringify(userInfo), {
       httpOnly: false,
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction,
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
-      domain:
-        process.env.NODE_ENV === "production" ? ".emildalhoff.dk" : undefined,
+      domain: isProduction ? ".emildalhoff.dk" : undefined,
     });
 
     return response;
