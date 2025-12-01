@@ -2,7 +2,7 @@
 "use client";
 import * as React from "react";
 import { usePathname } from "next/navigation";
-import { Home, UserRoundPlus, Brush, Cog, Earth, Menu, X } from "lucide-react";
+import { Home, UserRoundPlus, Brush, Cog, Earth, Menu, X, LogOut } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -113,32 +113,7 @@ export function AppSidebar({
           className="w-10 h-10 rounded-2xl flex items-center justify-center text-gray-600 bg-transparent hover:bg-gray-100/50 transition-colors"
           title="Logout"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M17.4399 14.62L19.9999 12.06L17.4399 9.5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeMiterlimit="10"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M9.76001 12.0601H19.93"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeMiterlimit="10"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M11.76 20C7.34001 20 3.76001 17 3.76001 4 11.76 4"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeMiterlimit="10"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <LogOut className="w-5 h-5" strokeWidth={2} />
         </button>
       </div>
     </>
