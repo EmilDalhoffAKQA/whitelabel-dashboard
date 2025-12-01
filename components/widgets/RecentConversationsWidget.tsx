@@ -30,6 +30,46 @@ export function RecentConversationsWidget({
     loadConversations();
   }, [marketId, workspaceId]);
 
+  // Listen for realtime inserts so the widget updates when mock data is generated elsewhere
+  useEffect(() => {
+    // Only attach subscription in browser
+    let channel: any = null;
+    try {
+      channel = supabase
+        .channel("public:conversations")
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "conversations" },
+          (payload) => {
+            const newRow = (payload as any).new;
+            if (!newRow) return;
+            // If widget is scoped, ignore unrelated inserts
+            if (workspaceId && newRow.workspace_id !== workspaceId) return;
+            if (marketId && newRow.market_id !== marketId) return;
+            // Reload conversations to reflect the new data
+            loadConversations();
+          }
+        )
+        .subscribe();
+    } catch (e) {
+      // ignore realtime setup errors in environments without realtime
+      console.warn("Realtime not available", e);
+    }
+
+    return () => {
+      if (channel) {
+        try {
+          supabase.removeChannel(channel);
+        } catch (e) {
+          // fallback unsubscribe
+          try {
+            channel.unsubscribe();
+          } catch {}
+        }
+      }
+    };
+  }, [marketId, workspaceId]);
+
   const loadConversations = async () => {
     try {
       let query = supabase

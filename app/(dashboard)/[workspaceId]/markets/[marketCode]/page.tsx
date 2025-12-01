@@ -52,6 +52,29 @@ export default function MarketDashboardPage() {
       }
 
       setMarket(marketData);
+
+      // Ensure analytics snapshots exist for today for this market — if not, generate mock data
+      const today = new Date().toISOString().split("T")[0];
+      const { data: todaySnapshot } = await supabase
+        .from("analytics_snapshots")
+        .select("id")
+        .eq("workspace_id", workspaceId)
+        .eq("market_id", marketData.id)
+        .gte("timestamp", `${today}T00:00:00`)
+        .single();
+
+      if (!todaySnapshot) {
+        // call server-side route to refresh mock data for this market
+        try {
+          await fetch(`/api/markets/refresh`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ workspaceId: workspaceId, marketId: marketData.id, days: 7 }),
+          });
+        } catch (e) {
+          console.error("Failed to refresh mock data", e);
+        }
+      }
     } catch (error) {
       console.error("Error loading data:", error);
       router.push(`/${workspaceId}/markets`);
