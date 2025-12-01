@@ -19,18 +19,22 @@ export async function sendInviteEmail({
   to,
   name,
   inviteLink,
+  workspaceName,
 }: {
   to: string;
   name: string;
   inviteLink: string;
+  workspaceName?: string;
 }) {
   const client = getMailjetClient();
+  const companyName = workspaceName || "Your Company";
+
   const result = await client.post("send", { version: "v3.1" }).request({
     Messages: [
       {
         From: {
           Email: process.env.MAILJET_FROM_EMAIL!,
-          Name: "Your Company",
+          Name: companyName,
         },
         To: [
           {
@@ -38,13 +42,13 @@ export async function sendInviteEmail({
             Name: name || to,
           },
         ],
-        Subject: "You are invited! Set your password",
+        Subject: `You are invited to ${companyName}! Set your password`,
         TextPart: `Hi ${
           name || ""
-        },\n\nYou have been invited. Set your password here: ${inviteLink}`,
+        },\n\nYou have been invited to ${companyName}. Set your password here: ${inviteLink}`,
         HTMLPart: `<h3>Hi ${
           name || ""
-        },</h3><p>You have been invited. <a href="${inviteLink}">Set your password here</a>.</p>`,
+        },</h3><p>You have been invited to ${companyName}. <a href="${inviteLink}">Set your password here</a>.</p>`,
       },
     ],
   });

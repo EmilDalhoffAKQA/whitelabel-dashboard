@@ -174,14 +174,23 @@ export async function POST(req: NextRequest) {
     // Step 5: Send invitation email with password setup link
     if (inviteLink) {
       try {
+        console.log("Attempting to send email to:", body.adminEmail);
+        console.log("Mailjet credentials present:", {
+          apiKey: !!process.env.MAILJET_API_KEY,
+          apiSecret: !!process.env.MAILJET_API_SECRET,
+          fromEmail: process.env.MAILJET_FROM_EMAIL,
+        });
+        
         const { sendInviteEmail } = await import("@/lib/mailjet");
-        await sendInviteEmail({
+        const result = await sendInviteEmail({
           to: body.adminEmail,
           name: body.adminName,
           inviteLink,
         });
+        console.log("Email sent successfully:", result);
       } catch (emailError) {
-        console.error("Email sending error:", emailError);
+        console.error("Email sending error (full details):", emailError);
+        console.error("Error message:", emailError instanceof Error ? emailError.message : String(emailError));
         // Continue anyway - user can request password reset
       }
     }
