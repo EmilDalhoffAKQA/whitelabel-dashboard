@@ -70,6 +70,7 @@ export async function GET(req: NextRequest) {
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
+      domain: process.env.NODE_ENV === "production" ? ".emildalhoff.dk" : undefined,
     });
 
     response.cookies.set("user_info", JSON.stringify(userInfo), {
@@ -78,6 +79,7 @@ export async function GET(req: NextRequest) {
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
+      domain: process.env.NODE_ENV === "production" ? ".emildalhoff.dk" : undefined,
     });
 
     return response;
