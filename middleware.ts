@@ -26,6 +26,16 @@ export function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
 
+  // Redirect root path to login if no token (handles Auth0 logout redirect)
+  if (pathname === "/" && !token) {
+    const loginUrl = new URL("/login", request.url);
+    if (hostname.startsWith("www.")) {
+      loginUrl.host = hostname;
+    }
+    console.log("[Middleware] Redirecting root to login - no token");
+    return NextResponse.redirect(loginUrl);
+  }
+
   // Check auth FIRST before doing www redirect
   // Protect all /[workspaceId]/* routes and /workspaces
   const isProtectedRoute =
