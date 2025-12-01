@@ -180,7 +180,7 @@ export async function POST(req: NextRequest) {
           apiSecret: !!process.env.MAILJET_API_SECRET,
           fromEmail: process.env.MAILJET_FROM_EMAIL,
         });
-        
+
         const { sendInviteEmail } = await import("@/lib/mailjet");
         const result = await sendInviteEmail({
           to: body.adminEmail,
@@ -191,7 +191,10 @@ export async function POST(req: NextRequest) {
         console.log("Email sent successfully:", result);
       } catch (emailError) {
         console.error("Email sending error (full details):", emailError);
-        console.error("Error message:", emailError instanceof Error ? emailError.message : String(emailError));
+        console.error(
+          "Error message:",
+          emailError instanceof Error ? emailError.message : String(emailError)
+        );
         // Continue anyway - user can request password reset
       }
     }
