@@ -4,8 +4,34 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
   const pathname = request.nextUrl.pathname;
+  const token = request.cookies.get("auth_token");
 
-  // Redirect non-www to www, but EXCLUDE API routes to prevent OAuth issues
+  // Check auth FIRST before doing www redirect
+  // Protect all /[workspaceId]/* routes and /workspaces
+  const isProtectedRoute =
+    /^\/[^/]+\//.test(pathname) || pathname.startsWith("/workspaces");
+
+  // Redirect to login if accessing protected route without token
+  if (!token && isProtectedRoute) {
+    const loginUrl = new URL("/login", request.url);
+    // Preserve www in the redirect
+    if (hostname.startsWith("www.")) {
+      loginUrl.host = hostname;
+    }
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Redirect to workspaces if accessing login with token
+  if (token && pathname === "/login") {
+    const workspacesUrl = new URL("/workspaces", request.url);
+    // Preserve www in the redirect
+    if (hostname.startsWith("www.")) {
+      workspacesUrl.host = hostname;
+    }
+    return NextResponse.redirect(workspacesUrl);
+  }
+
+  // Redirect non-www to www AFTER auth checks, but EXCLUDE API routes
   if (
     hostname === "emildalhoff.dk" &&
     !pathname.startsWith("/api/") &&
@@ -14,23 +40,6 @@ export function middleware(request: NextRequest) {
     const wwwUrl = new URL(request.url);
     wwwUrl.host = "www.emildalhoff.dk";
     return NextResponse.redirect(wwwUrl, 308);
-  }
-
-  const token = request.cookies.get("auth_token");
-
-  // Protect all /[workspaceId]/* routes and /workspaces
-  const isProtectedRoute =
-    /^\/[^/]+\//.test(pathname) || pathname.startsWith("/workspaces");
-
-  // Redirect to login if accessing protected route without token
-  if (!token && isProtectedRoute) {
-    const loginUrl = new URL("/login", request.url);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // Redirect to workspaces if accessing login with token
-  if (token && pathname === "/login") {
-    return NextResponse.redirect(new URL("/workspaces", request.url));
   }
 
   return NextResponse.next();
