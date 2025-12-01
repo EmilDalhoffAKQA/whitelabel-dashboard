@@ -2,8 +2,21 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get("auth_token");
+  const hostname = request.headers.get("host") || "";
   const pathname = request.nextUrl.pathname;
+
+  // Redirect non-www to www, but EXCLUDE API routes to prevent OAuth issues
+  if (
+    hostname === "emildalhoff.dk" &&
+    !pathname.startsWith("/api/") &&
+    !pathname.startsWith("/_next/")
+  ) {
+    const wwwUrl = new URL(request.url);
+    wwwUrl.host = "www.emildalhoff.dk";
+    return NextResponse.redirect(wwwUrl, 308);
+  }
+
+  const token = request.cookies.get("auth_token");
 
   // Protect all /[workspaceId]/* routes and /workspaces
   const isProtectedRoute =
