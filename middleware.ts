@@ -75,7 +75,7 @@ export function middleware(request: NextRequest) {
     }
     return NextResponse.redirect(workspacesUrl);
   }
-  
+
   // Allow /login with token (for logout flow)
   if (token && pathname === "/login") {
     // Let it through - cookies will be cleared
