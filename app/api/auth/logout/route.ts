@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
   // Clear all auth cookies first
   const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-  
+
   // Build the Auth0 logout URL - use base URL which is already whitelisted
   const logoutUrl = new URL(`https://${process.env.AUTH0_DOMAIN}/v2/logout`);
   logoutUrl.searchParams.set("client_id", process.env.AUTH0_CLIENT_ID!);
