@@ -305,7 +305,6 @@ export default function DashboardSettingsPage() {
         </Card>
       </div>
 
-      {/* Widget Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         {workspaceWidgets.map((widget) => {
           const widgetType = widget.widget_type;
@@ -395,47 +394,6 @@ export default function DashboardSettingsPage() {
           );
         })}
       </div>
-
-      {/* Help Section */}
-      <Card className="border-gray-200">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <div
-              className="p-2 rounded-lg"
-              style={{
-                backgroundColor: `${primaryColor}10`,
-                color: primaryColor,
-              }}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </div>
-            <CardTitle className="text-base">Managing Your Dashboard</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid sm:grid-cols-2 gap-4 text-sm text-gray-600">
-            <div>
-              <p className="font-medium text-gray-900 mb-1">Adding Widgets</p>
-              <p>
-                Click "Edit Layout" on the dashboard, then select from the "+
-                Add Widget" menu
-              </p>
-            </div>
-            <div>
-              <p className="font-medium text-gray-900 mb-1">Removing Widgets</p>
-              <p>In edit mode, click the × button on any widget card</p>
-            </div>
-            <div>
-              <p className="font-medium text-gray-900 mb-1">Rearranging</p>
-              <p>Drag widgets to reposition them while in edit mode</p>
-            </div>
-            <div>
-              <p className="font-medium text-gray-900 mb-1">Widget Sizes</p>
-              <p>Small (3 cells), Medium (6 cells), Large (12 cells)</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

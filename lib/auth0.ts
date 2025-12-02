@@ -106,9 +106,7 @@ export async function generatePasswordResetTicket(userId: string) {
       body: JSON.stringify({
         user_id: userId,
         result_url: resultUrl,
-        // Set TTL to 7 days (604800 seconds) to give users time to complete onboarding
         ttl_sec: 604800,
-        // Mark email as verified after password reset
         mark_email_as_verified: true,
       }),
     }
