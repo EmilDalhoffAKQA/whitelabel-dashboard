@@ -67,7 +67,10 @@ export function middleware(request: NextRequest) {
   }
 
   // Redirect to workspaces if accessing public routes with valid token (except login during logout)
-  if (token && isPublicRoute && pathname !== "/login") {
+  // Check for logout parameter to allow login page during logout flow
+  const isLogoutFlow = request.nextUrl.searchParams.get("logout") === "true";
+  
+  if (token && isPublicRoute && !isLogoutFlow) {
     const workspacesUrl = new URL("/workspaces", request.url);
     // Preserve www in the redirect
     if (hostname.startsWith("www.")) {
@@ -76,9 +79,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(workspacesUrl);
   }
 
-  // Allow /login with token (for logout flow)
-  if (token && pathname === "/login") {
-    // Let it through - cookies will be cleared
+  // Allow /login during logout flow even with token
+  if (pathname === "/login" && isLogoutFlow) {
+    // Let it through - cookies will be cleared on client side
     return NextResponse.next();
   }
 

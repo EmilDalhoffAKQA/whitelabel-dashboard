@@ -1,8 +1,26 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 
 function LoginPageInner() {
+  const searchParams = useSearchParams();
+  const isLogout = searchParams.get("logout") === "true";
+
+  useEffect(() => {
+    // Clear cookies on the client side if this is a logout
+    if (isLogout) {
+      document.cookie = "auth_token=; Max-Age=0; path=/";
+      document.cookie = "user_info=; Max-Age=0; path=/";
+      document.cookie = "current_workspace=; Max-Age=0; path=/";
+      
+      // Remove the logout parameter from URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete("logout");
+      window.history.replaceState({}, "", url.pathname);
+    }
+  }, [isLogout]);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     const baseUrl =
