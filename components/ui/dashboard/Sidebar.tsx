@@ -15,6 +15,12 @@ import {
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 type NavItem = {
@@ -54,7 +60,7 @@ export function AppSidebar({
   const [open, setOpen] = React.useState(false);
 
   const SidebarContent = () => (
-    <>
+    <TooltipProvider delayDuration={300}>
       <div className="pb-6 md:pb-8 flex-shrink-0">
         {logo ? (
           <div className="w-16 h-16 md:w-20 md:h-20 rounded-3xl bg-white flex items-center justify-center mx-auto">
@@ -83,58 +89,76 @@ export function AppSidebar({
             const isActive = pathname === item.href;
 
             return (
-              <a
-                key={item.href}
-                href={item.href}
-                onClick={() => isMobile && setOpen(false)}
-                className={`w-12 h-12 md:w-12 md:h-12 rounded-2xl flex items-center justify-center transition-all ${
-                  isActive
-                    ? "text-white shadow-lg scale-105"
-                    : "text-gray-600 bg-transparent hover:bg-gray-100/50 hover:scale-105"
-                }`}
-                style={isActive ? { backgroundColor: primaryColor } : {}}
-              >
-                <Icon className="w-5 h-5" strokeWidth={2} />
-              </a>
+              <Tooltip key={item.href}>
+                <TooltipTrigger asChild>
+                  <a
+                    href={item.href}
+                    onClick={() => isMobile && setOpen(false)}
+                    className={`w-12 h-12 md:w-12 md:h-12 rounded-2xl flex items-center justify-center transition-all ${
+                      isActive
+                        ? "text-white shadow-lg scale-105"
+                        : "text-gray-600 bg-transparent hover:bg-gray-100/50 hover:scale-105"
+                    }`}
+                    style={isActive ? { backgroundColor: primaryColor } : {}}
+                  >
+                    <Icon className="w-5 h-5" strokeWidth={2} />
+                  </a>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="bg-gray-900 text-white">
+                  <p>{item.label}</p>
+                </TooltipContent>
+              </Tooltip>
             );
           })}
         </div>
       </div>
 
       <div className="space-y-3 flex flex-col items-center flex-shrink-0 pb-6">
-        <button
-          onClick={() => {
-            window.location.href = `/${
-              pathname.split("/")[1]
-            }/dashboard-settings`;
-            if (isMobile) setOpen(false);
-          }}
-          className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
-            pathname.includes("/dashboard-settings")
-              ? "text-white shadow-lg scale-105"
-              : "text-gray-600 bg-transparent hover:bg-gray-100/50 hover:scale-105"
-          }`}
-          style={
-            pathname.includes("/dashboard-settings")
-              ? { backgroundColor: primaryColor }
-              : {}
-          }
-          title="Dashboard Settings"
-        >
-          <Cog className="w-5 h-5" strokeWidth={2} />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => {
+                window.location.href = `/${
+                  pathname.split("/")[1]
+                }/dashboard-settings`;
+                if (isMobile) setOpen(false);
+              }}
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+                pathname.includes("/dashboard-settings")
+                  ? "text-white shadow-lg scale-105"
+                  : "text-gray-600 bg-transparent hover:bg-gray-100/50 hover:scale-105"
+              }`}
+              style={
+                pathname.includes("/dashboard-settings")
+                  ? { backgroundColor: primaryColor }
+                  : {}
+              }
+            >
+              <Cog className="w-5 h-5" strokeWidth={2} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="bg-gray-900 text-white">
+            <p>Dashboard Settings</p>
+          </TooltipContent>
+        </Tooltip>
 
-        <button
-          onClick={() => {
-            window.location.href = "/api/auth/logout";
-          }}
-          className="w-12 h-12 rounded-2xl flex items-center justify-center text-gray-600 bg-transparent hover:bg-gray-100/50 transition-all hover:scale-105"
-          title="Logout"
-        >
-          <LogOut className="w-5 h-5" strokeWidth={2} />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={() => {
+                window.location.href = "/api/auth/logout";
+              }}
+              className="w-12 h-12 rounded-2xl flex items-center justify-center text-gray-600 bg-transparent hover:bg-gray-100/50 transition-all hover:scale-105"
+            >
+              <LogOut className="w-5 h-5" strokeWidth={2} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="bg-gray-900 text-white">
+            <p>Logout</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
-    </>
+    </TooltipProvider>
   );
 
   if (isMobile) {
