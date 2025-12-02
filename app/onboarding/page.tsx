@@ -27,6 +27,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<OnboardingFormData>({
     companyName: "",
@@ -38,6 +39,38 @@ export default function OnboardingPage() {
 
   const updateFormData = (field: keyof OnboardingFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload/logo", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to upload logo");
+      }
+
+      const { url } = await response.json();
+      updateFormData("logoUrl", url);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -209,23 +242,74 @@ export default function OnboardingPage() {
                               />
                             </svg>
                             <span className="truncate max-w-xs">
-                              {formData.logoUrl}
+                              {formData.logoUrl.split("/").pop()}
                             </span>
                           </div>
                         </div>
                       ) : (
-                        <div className="text-gray-400">No logo uploaded</div>
+                        <div className="text-gray-400">
+                          {uploading ? "Uploading..." : "No logo uploaded"}
+                        </div>
                       )}
                     </div>
-                    <Input
-                      type="url"
-                      value={formData.logoUrl}
-                      onChange={(e) =>
-                        updateFormData("logoUrl", e.target.value)
-                      }
-                      placeholder="https://example.com/logo.png"
-                      className="mt-2 border border-gray-300"
-                    />
+
+                    {/* File Upload Button */}
+                    <div className="mt-2">
+                      <label
+                        htmlFor="logo-upload"
+                        className="block w-full cursor-pointer"
+                      >
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
+                          <svg
+                            className="w-8 h-8 mx-auto mb-2 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                            />
+                          </svg>
+                          <p className="text-sm text-gray-600">
+                            {uploading
+                              ? "Uploading..."
+                              : "Click to upload or drag and drop"}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            PNG, JPG, SVG or WebP (max 5MB)
+                          </p>
+                        </div>
+                        <input
+                          id="logo-upload"
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp"
+                          onChange={handleFileUpload}
+                          disabled={uploading}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {/* URL Input */}
+                    <div className="mt-2">
+                      <div className="text-center text-xs text-gray-500 mb-2">
+                        or paste a URL
+                      </div>
+                      <Input
+                        type="url"
+                        value={formData.logoUrl}
+                        onChange={(e) =>
+                          updateFormData("logoUrl", e.target.value)
+                        }
+                        placeholder="https://example.com/logo.png"
+                        className="border border-gray-300"
+                        disabled={uploading}
+                      />
+                    </div>
+
                     <p className="text-xs text-gray-500 mt-2">
                       If set, this is the logo that will be displayed to
                       end-users for this organization in any interaction with
