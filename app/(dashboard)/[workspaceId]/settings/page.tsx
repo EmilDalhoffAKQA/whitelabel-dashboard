@@ -11,7 +11,6 @@ import { supabase } from "@/lib/supabase";
 interface ThemeFormData {
   logoUrl: string;
   primaryColor: string;
-  pageBackgroundColor: string;
 }
 
 export default function SettingsPage() {
@@ -26,7 +25,6 @@ export default function SettingsPage() {
   const [formData, setFormData] = useState<ThemeFormData>({
     logoUrl: "",
     primaryColor: "#63513D",
-    pageBackgroundColor: "#F8F8F8",
   });
 
   useEffect(() => {
@@ -52,8 +50,6 @@ export default function SettingsPage() {
         setFormData({
           logoUrl: workspace.theme_config.logo || workspace.logo_url || "",
           primaryColor: workspace.theme_config.primaryColor || "#63513D",
-          pageBackgroundColor:
-            workspace.theme_config.pageBackgroundColor || "#F8F8F8",
         });
       } else if (workspace.logo_url) {
         setFormData((prev) => ({ ...prev, logoUrl: workspace.logo_url }));
@@ -83,7 +79,7 @@ export default function SettingsPage() {
           logo_url: formData.logoUrl || null,
           theme_config: {
             primaryColor: formData.primaryColor,
-            pageBackgroundColor: formData.pageBackgroundColor,
+            pageBackgroundColor: "#F8F8F8",
             logo: formData.logoUrl || "",
             favicon: formData.logoUrl || "",
           },
@@ -196,13 +192,6 @@ export default function SettingsPage() {
               description="If set, this will be the primary color for CTAs that will be displayed to end-users for this organization in your application's authentication flows."
             />
 
-            <ColorPicker
-              color={formData.pageBackgroundColor}
-              onChange={(color) => updateFormData("pageBackgroundColor", color)}
-              label="Page Background Color"
-              description="If set, this will be the page background color that will be displayed to end-users for this organization in your application's authentication flows."
-            />
-
             <Button
               onClick={handleSave}
               className="w-full text-white"
@@ -223,7 +212,7 @@ export default function SettingsPage() {
               <CardContent>
                 <div
                   className="rounded-lg shadow-lg overflow-hidden"
-                  style={{ backgroundColor: formData.pageBackgroundColor }}
+                  style={{ backgroundColor: "#F8F8F8" }}
                 >
                   <div className="bg-white p-8 mx-8 mt-8 rounded-lg shadow-sm">
                     {formData.logoUrl ? (

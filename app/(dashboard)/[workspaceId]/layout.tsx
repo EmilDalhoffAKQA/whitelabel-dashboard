@@ -109,7 +109,7 @@ export default async function WorkspaceLayout({
   const themeConfig = data.workspace.theme_config;
   const theme = {
     primaryColor: themeConfig?.primaryColor || "#2563eb",
-    pageBackgroundColor: themeConfig?.pageBackgroundColor || "#F9FAFB",
+    pageBackgroundColor: "#F8F8F8",
     logo: themeConfig?.logo || data.workspace.logo_url || "",
     favicon:
       themeConfig?.favicon ||

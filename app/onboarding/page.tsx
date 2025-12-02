@@ -20,7 +20,6 @@ interface OnboardingFormData {
   adminName: string;
   adminEmail: string;
   primaryColor: string;
-  pageBackgroundColor: string;
   logoUrl: string;
 }
 
@@ -34,7 +33,6 @@ export default function OnboardingPage() {
     adminName: "",
     adminEmail: "",
     primaryColor: "#63513D",
-    pageBackgroundColor: "#F8F8F8",
     logoUrl: "",
   });
 
@@ -241,15 +239,6 @@ export default function OnboardingPage() {
                     label="Primary Color"
                     description="If set, this will be the primary color for CTAs that will be displayed to end-users for this organization in your application's authentication flows."
                   />
-
-                  <ColorPicker
-                    color={formData.pageBackgroundColor}
-                    onChange={(color) =>
-                      updateFormData("pageBackgroundColor", color)
-                    }
-                    label="Page Background Color"
-                    description="If set, this will be the page background color that will be displayed to end-users for this organization in your application's authentication flows."
-                  />
                 </div>
 
                 <div className="flex gap-2">
@@ -279,7 +268,7 @@ export default function OnboardingPage() {
                 <div className="sticky top-6">
                   <div
                     className="rounded-lg shadow-lg overflow-hidden"
-                    style={{ backgroundColor: formData.pageBackgroundColor }}
+                    style={{ backgroundColor: "#F8F8F8" }}
                   >
                     <div className="bg-white p-8 mx-8 mt-8 rounded-lg shadow-sm">
                       {formData.logoUrl ? (

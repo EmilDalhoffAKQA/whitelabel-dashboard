@@ -11,7 +11,6 @@ interface OnboardingRequest {
   adminName: string;
   adminEmail: string;
   primaryColor: string;
-  pageBackgroundColor: string;
   logoUrl?: string;
 }
 
@@ -44,7 +43,7 @@ export async function POST(req: NextRequest) {
         logo_url: body.logoUrl || null,
         theme_config: {
           primaryColor: body.primaryColor,
-          pageBackgroundColor: body.pageBackgroundColor,
+          pageBackgroundColor: "#F8F8F8",
           logo: body.logoUrl || "",
           favicon: body.logoUrl || "",
         },
