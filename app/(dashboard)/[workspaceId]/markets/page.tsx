@@ -203,8 +203,39 @@ export default function MarketsPage() {
       </div>
 
       {/* Markets Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {marketStats.map(({ market, today, yesterday }) => {
+      {marketStats.length === 0 ? (
+        <Card className="border-dashed border-2 border-gray-300">
+          <CardContent className="pt-12 pb-12 text-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
+                <Globe className="h-8 w-8 text-gray-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  No markets found
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Get started by adding default markets to your workspace
+                </p>
+                <Button
+                  onClick={handleSeedMarkets}
+                  disabled={seeding}
+                  variant="dashboard"
+                  style={{
+                    backgroundColor: primaryColor,
+                    color: "white",
+                  }}
+                  className="hover:opacity-90"
+                >
+                  {seeding ? "Adding Markets..." : "Add Default Markets"}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {marketStats.map(({ market, today, yesterday }) => {
           const trend =
             yesterday.conversations > 0
               ? Math.round(
@@ -291,7 +322,8 @@ export default function MarketsPage() {
             </Card>
           );
         })}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
