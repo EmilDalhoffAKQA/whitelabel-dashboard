@@ -12,7 +12,7 @@ function LoginPageInner() {
     if (isLogout) {
       const isLocalhost = window.location.hostname.includes("localhost");
       const domain = isLocalhost ? "" : "; domain=.emildalhoff.dk";
-      
+
       document.cookie = `auth_token=; Max-Age=0; path=/${domain}`;
       document.cookie = `user_info=; Max-Age=0; path=/${domain}`;
       document.cookie = `current_workspace=; Max-Age=0; path=/${domain}`;
