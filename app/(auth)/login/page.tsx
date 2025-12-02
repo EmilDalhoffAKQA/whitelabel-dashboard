@@ -10,9 +10,12 @@ function LoginPageInner() {
   useEffect(() => {
     // Clear cookies on the client side if this is a logout
     if (isLogout) {
-      document.cookie = "auth_token=; Max-Age=0; path=/";
-      document.cookie = "user_info=; Max-Age=0; path=/";
-      document.cookie = "current_workspace=; Max-Age=0; path=/";
+      const isLocalhost = window.location.hostname.includes("localhost");
+      const domain = isLocalhost ? "" : "; domain=.emildalhoff.dk";
+      
+      document.cookie = `auth_token=; Max-Age=0; path=/${domain}`;
+      document.cookie = `user_info=; Max-Age=0; path=/${domain}`;
+      document.cookie = `current_workspace=; Max-Age=0; path=/${domain}`;
 
       // Remove the logout parameter from URL
       const url = new URL(window.location.href);
