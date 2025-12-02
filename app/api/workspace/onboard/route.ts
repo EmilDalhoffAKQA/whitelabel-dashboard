@@ -60,6 +60,39 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Step 1.5: Seed default markets for the workspace
+    try {
+      const defaultMarkets = [
+        { name: "Denmark", market_code: "DK", language: "Danish" },
+        { name: "Sweden", market_code: "SE", language: "Swedish" },
+        { name: "Norway", market_code: "NO", language: "Norwegian" },
+        { name: "Finland", market_code: "FI", language: "Finnish" },
+        { name: "Germany", market_code: "DE", language: "German" },
+      ];
+
+      const marketsToInsert = defaultMarkets.map((market) => ({
+        workspace_id: workspace.id,
+        name: market.name,
+        market_code: market.market_code,
+        language: market.language,
+        is_active: true,
+      }));
+
+      const { error: marketsError } = await supabaseAdmin
+        .from("markets")
+        .insert(marketsToInsert);
+
+      if (marketsError) {
+        console.error("Markets seeding error:", marketsError);
+        // Don't fail the whole onboarding if markets fail
+      } else {
+        console.log("Default markets seeded successfully");
+      }
+    } catch (marketsErr) {
+      console.error("Markets seeding exception:", marketsErr);
+      // Continue with onboarding even if markets fail
+    }
+
     // Step 2: Create user in Auth0
     let auth0User;
     let inviteLink = null;

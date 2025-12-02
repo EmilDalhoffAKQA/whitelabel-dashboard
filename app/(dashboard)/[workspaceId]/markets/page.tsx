@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import { Market } from "@/lib/types";
 import { Globe, MessageSquare, TrendingUp, TrendingDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface MarketStats {
   market: Market;
@@ -26,6 +27,7 @@ export default function MarketsPage() {
   const [marketStats, setMarketStats] = useState<MarketStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [primaryColor, setPrimaryColor] = useState("#3b82f6");
+  const [seeding, setSeeding] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -96,6 +98,27 @@ export default function MarketsPage() {
       console.error("Error loading data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSeedMarkets = async () => {
+    setSeeding(true);
+    try {
+      const response = await fetch("/api/markets/seed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workspaceId }),
+      });
+
+      if (!response.ok) throw new Error("Failed to seed markets");
+
+      // Reload data after seeding
+      await loadData();
+    } catch (error) {
+      console.error("Error seeding markets:", error);
+      alert("Failed to seed markets. Please try again.");
+    } finally {
+      setSeeding(false);
     }
   };
 
