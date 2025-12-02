@@ -31,9 +31,10 @@ export async function syncWorkspaceWidgets(workspaceId: number) {
     .order("y_position", { ascending: false });
 
   // Find the max Y position from visible widgets only
-  let nextY = visibleLayouts && visibleLayouts.length > 0 
-    ? Math.max(...visibleLayouts.map(l => l.y_position + l.height))
-    : 0;
+  let nextY =
+    visibleLayouts && visibleLayouts.length > 0
+      ? Math.max(...visibleLayouts.map((l) => l.y_position + l.height))
+      : 0;
 
   const COLS = 12;
   let currentX = 0;
@@ -41,7 +42,7 @@ export async function syncWorkspaceWidgets(workspaceId: number) {
 
   const newLayouts = missingWidgets.map((widget) => {
     const widgetWidth = widget.width;
-    
+
     // Check if widget fits in current row
     if (currentX + widgetWidth > COLS) {
       // Move to next row
