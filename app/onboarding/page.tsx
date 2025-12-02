@@ -13,6 +13,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { ColorPicker } from "@/components/ui/color-picker";
+import { toast } from "sonner";
 
 interface OnboardingFormData {
   companyName: string;
@@ -66,9 +67,10 @@ export default function OnboardingPage() {
       const { workspace } = await response.json();
 
       // Show success message and redirect to login
-      alert(
-        `Workspace "${workspace.name}" created successfully! Please check your email (${formData.adminEmail}) to set your password and log in.`
-      );
+      toast.success("Workspace created successfully!", {
+        description: `Please check your email (${formData.adminEmail}) to set your password and log in.`,
+        duration: 5000,
+      });
       router.push(`/login`);
     } catch (err: any) {
       setError(err.message);

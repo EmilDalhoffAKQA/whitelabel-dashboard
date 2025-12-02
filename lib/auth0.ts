@@ -91,6 +91,10 @@ export async function createAuth0User(
 export async function generatePasswordResetTicket(userId: string) {
   const token = await getManagementApiToken();
 
+  // Construct the full login URL for redirect after password change
+  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const resultUrl = `${baseUrl}/login`;
+
   const response = await fetch(
     `https://${process.env.AUTH0_DOMAIN}/api/v2/tickets/password-change`,
     {
@@ -101,7 +105,11 @@ export async function generatePasswordResetTicket(userId: string) {
       },
       body: JSON.stringify({
         user_id: userId,
-        result_url: process.env.NEXTAUTH_URL || "http://localhost:3000/login",
+        result_url: resultUrl,
+        // Set TTL to 7 days (604800 seconds) to give users time to complete onboarding
+        ttl_sec: 604800,
+        // Mark email as verified after password reset
+        mark_email_as_verified: true,
       }),
     }
   );
