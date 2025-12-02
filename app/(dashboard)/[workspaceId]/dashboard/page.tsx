@@ -263,9 +263,40 @@ export default function DashboardPage() {
 
   const handleAddWidget = async (widgetId: string | number) => {
     try {
+      // Find the widget to add
+      const widgetToAdd = hiddenWidgets.find(
+        (w) => w.id.toString() === widgetId.toString()
+      );
+
+      if (!widgetToAdd) {
+        console.error("Widget not found");
+        return;
+      }
+
+      // Calculate next horizontal position (all in same row, y=0)
+      let nextX = 0;
+      const visibleInFirstRow = widgets.filter((w) => w.y_position === 0);
+
+      if (visibleInFirstRow.length > 0) {
+        // Find the rightmost widget in the first row
+        const rightmostWidget = visibleInFirstRow.reduce((max, w) =>
+          w.x_position + w.width > max.x_position + max.width ? w : max
+        );
+        nextX = rightmostWidget.x_position + rightmostWidget.width;
+      }
+
+      // If it doesn't fit in the first row (exceeds 12 columns), start new row
+      const finalY = nextX + widgetToAdd.width > 12 ? 1 : 0;
+      const finalX = nextX + widgetToAdd.width > 12 ? 0 : nextX;
+
+      // Update widget position and visibility
       const { error } = await supabase
         .from("workspace_widget_layouts")
-        .update({ is_visible: true })
+        .update({
+          is_visible: true,
+          x_position: finalX,
+          y_position: finalY,
+        })
         .eq("id", widgetId);
 
       if (error) throw error;
