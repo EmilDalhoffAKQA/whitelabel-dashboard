@@ -7,12 +7,14 @@ export async function GET(req: NextRequest) {
     hostname.includes("localhost") || hostname.includes("127.0.0.1");
   const cookieDomain = isLocalhost ? undefined : ".emildalhoff.dk";
 
+  // Build the return URL based on the current origin
+  const protocol = isLocalhost ? "http" : "https";
+  const baseUrl = `${protocol}://${hostname}`;
+  const returnToUrl = `${baseUrl}/login?logout=true`;
+
   // Build the Auth0 logout URL
   const auth0Domain =
     process.env.AUTH0_DOMAIN || "dev-5pkmczfntibnqqfu.us.auth0.com";
-  const baseUrl = process.env.NEXTAUTH_URL || req.nextUrl.origin;
-  const returnToUrl = `${baseUrl}/login?logout=true`;
-
   const auth0LogoutUrl = new URL(`https://${auth0Domain}/v2/logout`);
   auth0LogoutUrl.searchParams.set(
     "client_id",
