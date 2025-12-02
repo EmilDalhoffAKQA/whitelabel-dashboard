@@ -1,4 +1,3 @@
-// app/(dashboard)/[workspaceId]/dashboard/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -27,6 +26,8 @@ import {
 import { syncWorkspaceWidgets } from "@/lib/sync-widgets";
 import { SquarePen, Save, X, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import DashboardOnboarding from "@/components/DashboardOnboarding";
+import { useOnboarding } from "@/hooks/use-onboarding";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
@@ -43,11 +44,49 @@ export default function DashboardPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState("");
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState(0);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const params = useParams();
   const workspaceId = params?.workspaceId as string;
   const isMobile = useIsMobile();
   const [rowHeight, setRowHeight] = useState<number>(GRID_CONFIG.rowHeight);
+  const {
+    isOnboarded,
+    loading: onboardingLoading,
+    completeOnboarding,
+  } = useOnboarding(userEmail);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Get user email on mount
+  useEffect(() => {
+    if (!mounted) return;
+
+    const userInfo = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("user_info="));
+
+    if (userInfo) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(userInfo.split("=")[1]));
+        setUserEmail(parsed.email || "");
+      } catch (e) {
+        console.error("Error parsing user info:", e);
+      }
+    }
+  }, [mounted]);
+
+  // Show onboarding if user hasn't been onboarded
+  useEffect(() => {
+    if (mounted && !onboardingLoading && isOnboarded === false && !loading) {
+      setShowOnboarding(true);
+    }
+  }, [mounted, isOnboarded, onboardingLoading, loading]);
 
   useEffect(() => {
     loadDashboard();
@@ -306,9 +345,22 @@ export default function DashboardPage() {
     }
   };
 
+  // Onboarding handlers
+  const handleOnboardingNext = () => setOnboardingStep((prev) => prev + 1);
+  const handleOnboardingPrev = () =>
+    setOnboardingStep((prev) => Math.max(0, prev - 1));
+  const handleOnboardingComplete = async () => {
+    setShowOnboarding(false);
+    await completeOnboarding();
+  };
+  const handleOnboardingSkip = async () => {
+    setShowOnboarding(false);
+    await completeOnboarding();
+  };
+
   const primaryColor = workspace?.theme_config?.primaryColor || "#3b82f6";
 
-  if (loading) {
+  if (loading || onboardingLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div
@@ -338,405 +390,425 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 px-4 md:px-0">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">
-            {workspace.name} Dashboard
-          </h1>
-          <p className="text-sm md:text-base text-gray-600 mt-1">
-            Monitor your workspace performance and analytics
-          </p>
-        </div>
+    <>
+      {/* Only render onboarding after component mounts to prevent hydration errors */}
+      {mounted && (
+        <DashboardOnboarding
+          isActive={showOnboarding}
+          currentStep={onboardingStep}
+          onNext={handleOnboardingNext}
+          onPrev={handleOnboardingPrev}
+          onComplete={handleOnboardingComplete}
+          onSkip={handleOnboardingSkip}
+        />
+      )}
 
-        <div className="hidden sm:flex gap-2 flex-shrink-0">
-          {!isEditMode ? (
-            <Button
-              onClick={() => setIsEditMode(true)}
-              variant="dashboard"
-              size="default"
-              className="gap-2"
-            >
-              <SquarePen className="h-4 w-4" />
-              <span className="hidden md:inline">Edit layout</span>
-            </Button>
-          ) : (
-            <>
+      <div className="space-y-4 md:space-y-6 px-4 md:px-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">
+              {workspace.name} Dashboard
+            </h1>
+            <p className="text-sm md:text-base text-gray-600 mt-1">
+              Monitor your workspace performance and analytics
+            </p>
+          </div>
+
+          <div className="hidden sm:flex gap-2 flex-shrink-0">
+            {!isEditMode ? (
               <Button
-                onClick={handleCancelEdit}
-                variant="cancel"
+                onClick={() => setIsEditMode(true)}
+                variant="dashboard"
                 size="default"
                 className="gap-2"
+                data-onboarding="edit-button"
               >
-                <X className="h-4 w-4" />
-                Cancel
+                <SquarePen className="h-4 w-4" />
+                <span className="hidden md:inline">Edit layout</span>
               </Button>
+            ) : (
+              <>
+                <Button
+                  onClick={handleCancelEdit}
+                  variant="cancel"
+                  size="default"
+                  className="gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Cancel
+                </Button>
 
-              {hiddenWidgets.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="dashboard"
-                      size="default"
-                      className="gap-2"
+                {hiddenWidgets.length > 0 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="dashboard"
+                        size="default"
+                        className="gap-2"
+                        data-onboarding="add-widget-button"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Add Widget
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-56 bg-white border-gray-200 shadow-sm"
                     >
-                      <Plus className="h-3 w-3" />
-                      Add Widget
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="w-56 bg-white border-gray-200 shadow-sm"
-                  >
-                    <DropdownMenuLabel className="text-gray-900 font-semibold">
-                      Available Widgets
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-gray-200" />
-                    {hiddenWidgets.map((widget) => (
-                      <DropdownMenuItem
-                        key={widget.id}
-                        onClick={() => handleAddWidget(widget.id)}
-                        className="text-gray-900 hover:bg-gray-50 cursor-pointer"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        <span>{widget.widget_type?.display_name}</span>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-
-              <Button
-                onClick={handleSaveLayout}
-                disabled={isSaving}
-                variant="dashboard"
-                size="default"
-                className="gap-2"
-              >
-                <Save className="h-4 w-4" />
-                {isSaving ? "Saving..." : "Save"}
-              </Button>
-            </>
-          )}
-        </div>
-
-        <div className="sm:hidden">
-          {!isEditMode ? (
-            <Button
-              onClick={() => setIsEditMode(true)}
-              variant="dashboard"
-              className="w-full gap-2"
-            >
-              <SquarePen className="h-4 w-4" />
-              Edit layout
-            </Button>
-          ) : (
-            <div className="flex gap-2">
-              <Button
-                onClick={handleCancelEdit}
-                variant="cancel"
-                className="flex-1 gap-2"
-              >
-                <X className="h-4 w-4" />
-                Cancel
-              </Button>
-
-              {hiddenWidgets.length > 0 && (
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="dashboard" className="flex-1 gap-2">
-                      <Plus className="h-3 w-3" />
-                      Add
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="bottom" className="h-[80vh]">
-                    <div className="space-y-4 py-4">
-                      <h3 className="text-lg font-semibold">
+                      <DropdownMenuLabel className="text-gray-900 font-semibold">
                         Available Widgets
-                      </h3>
-                      <div className="space-y-2">
-                        {hiddenWidgets.map((widget) => (
-                          <Button
-                            key={widget.id}
-                            onClick={() => handleAddWidget(widget.id)}
-                            variant="dashboard"
-                            className="w-full justify-start gap-2"
-                          >
-                            <Plus className="h-4 w-4" />
-                            {widget.widget_type?.display_name}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              )}
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator className="bg-gray-200" />
+                      {hiddenWidgets.map((widget) => (
+                        <DropdownMenuItem
+                          key={widget.id}
+                          onClick={() => handleAddWidget(widget.id)}
+                          className="text-gray-900 hover:bg-gray-50 cursor-pointer"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          <span>{widget.widget_type?.display_name}</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
 
+                <Button
+                  onClick={handleSaveLayout}
+                  disabled={isSaving}
+                  variant="dashboard"
+                  size="default"
+                  className="gap-2"
+                  data-onboarding="save-button"
+                >
+                  <Save className="h-4 w-4" />
+                  {isSaving ? "Saving..." : "Save"}
+                </Button>
+              </>
+            )}
+          </div>
+
+          <div className="sm:hidden">
+            {!isEditMode ? (
               <Button
-                onClick={handleSaveLayout}
-                disabled={isSaving}
+                onClick={() => setIsEditMode(true)}
                 variant="dashboard"
-                className="flex-1 gap-2"
+                className="w-full gap-2"
               >
-                <Save className="h-4 w-4" />
-                {isSaving ? "..." : "Save"}
+                <SquarePen className="h-4 w-4" />
+                Edit layout
               </Button>
-            </div>
-          )}
+            ) : (
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleCancelEdit}
+                  variant="cancel"
+                  className="flex-1 gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Cancel
+                </Button>
+
+                {hiddenWidgets.length > 0 && (
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button variant="dashboard" className="flex-1 gap-2">
+                        <Plus className="h-3 w-3" />
+                        Add
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="h-[80vh]">
+                      <div className="space-y-4 py-4">
+                        <h3 className="text-lg font-semibold">
+                          Available Widgets
+                        </h3>
+                        <div className="space-y-2">
+                          {hiddenWidgets.map((widget) => (
+                            <Button
+                              key={widget.id}
+                              onClick={() => handleAddWidget(widget.id)}
+                              variant="dashboard"
+                              className="w-full justify-start gap-2"
+                            >
+                              <Plus className="h-4 w-4" />
+                              {widget.widget_type?.display_name}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                )}
+
+                <Button
+                  onClick={handleSaveLayout}
+                  disabled={isSaving}
+                  variant="dashboard"
+                  className="flex-1 gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  {isSaving ? "..." : "Save"}
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {widgets.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6 text-center py-12">
-            <p className="text-gray-500">
-              No widgets configured for this workspace.
-            </p>
-            <p className="text-sm text-gray-400 mt-2">
-              Learn about the widgets in settings.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className={isEditMode ? "edit-mode" : ""}>
-          {isMobile ? (
-            // Mobile: Stack widgets vertically
-            <div className="space-y-4">
-              {widgets.map((widget) => {
-                const WidgetComponent = getWidgetComponent(
-                  widget.widget_type?.component_name || ""
-                );
+        {widgets.length === 0 ? (
+          <Card>
+            <CardContent className="pt-6 text-center py-12">
+              <p className="text-gray-500">
+                No widgets configured for this workspace.
+              </p>
+              <p className="text-sm text-gray-400 mt-2">
+                Learn about the widgets in settings.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div
+            className={isEditMode ? "edit-mode" : ""}
+            data-onboarding="widget-grid"
+          >
+            {isMobile ? (
+              // Mobile: Stack widgets vertically
+              <div className="space-y-4">
+                {widgets.map((widget) => {
+                  const WidgetComponent = getWidgetComponent(
+                    widget.widget_type?.component_name || ""
+                  );
 
-                if (!WidgetComponent || !widget.widget_type) return null;
+                  if (!WidgetComponent || !widget.widget_type) return null;
 
-                return (
-                  <div key={widget.id} className="widget-container-mobile">
-                    {isEditMode && (
-                      <button
-                        onClick={() => handleRemoveWidget(widget.id)}
-                        className="absolute top-2 right-2 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-md hover:bg-gray-100 transition-colors"
-                        title="Remove widget"
-                      >
-                        <X className="h-4 w-4 text-gray-600" />
-                      </button>
-                    )}
-                    <WidgetComponent
-                      primaryColor={primaryColor}
-                      {...({} as any)}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            // Desktop/Tablet: Use grid layout
-            <ResponsiveGridLayout
-              className="layout"
-              layout={layout}
-              cols={GRID_CONFIG.cols}
-              rowHeight={rowHeight}
-              margin={GRID_CONFIG.margin}
-              containerPadding={GRID_CONFIG.containerPadding}
-              compactType="vertical"
-              preventCollision={false}
-              onLayoutChange={handleLayoutChange}
-              onDragStart={handleDragStart}
-              onDragStop={handleDragStop}
-              isDraggable={isEditMode}
-              isResizable={isEditMode}
-              draggableHandle=".drag-handle"
-            >
-              {widgets.map((widget) => {
-                const WidgetComponent = getWidgetComponent(
-                  widget.widget_type?.component_name || ""
-                );
-
-                if (!WidgetComponent || !widget.widget_type) return null;
-
-                return (
-                  <div key={widget.id} className="widget-container">
-                    {isEditMode && (
-                      <>
+                  return (
+                    <div key={widget.id} className="widget-container-mobile">
+                      {isEditMode && (
                         <button
                           onClick={() => handleRemoveWidget(widget.id)}
-                          className="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200 transition-colors"
+                          className="absolute top-2 right-2 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-md hover:bg-gray-100 transition-colors"
                           title="Remove widget"
                         >
-                          <X className="h-4 w-4 text-gray-500" />
+                          <X className="h-4 w-4 text-gray-600" />
                         </button>
-                        <div
-                          className="drag-handle absolute top-0 left-0 right-0 h-8 cursor-move bg-blue-500/10 border-2 border-blue-500 border-dashed rounded-t-lg flex items-center justify-center z-10"
-                          style={{ borderColor: primaryColor }}
-                        >
-                          <span
-                            className="text-xs font-medium"
-                            style={{ color: primaryColor }}
-                          >
-                            Drag to move
-                          </span>
-                        </div>
-                      </>
-                    )}
-                    <div className={isEditMode ? "pt-8 h-full" : "h-full"}>
+                      )}
                       <WidgetComponent
                         primaryColor={primaryColor}
                         {...({} as any)}
                       />
                     </div>
-                  </div>
-                );
-              })}
-            </ResponsiveGridLayout>
-          )}
-        </div>
-      )}
+                  );
+                })}
+              </div>
+            ) : (
+              // Desktop/Tablet: Use grid layout
+              <ResponsiveGridLayout
+                className="layout"
+                layout={layout}
+                cols={GRID_CONFIG.cols}
+                rowHeight={rowHeight}
+                margin={GRID_CONFIG.margin}
+                containerPadding={GRID_CONFIG.containerPadding}
+                compactType="vertical"
+                preventCollision={false}
+                onLayoutChange={handleLayoutChange}
+                onDragStart={handleDragStart}
+                onDragStop={handleDragStop}
+                isDraggable={isEditMode}
+                isResizable={isEditMode}
+                draggableHandle=".drag-handle"
+              >
+                {widgets.map((widget) => {
+                  const WidgetComponent = getWidgetComponent(
+                    widget.widget_type?.component_name || ""
+                  );
 
-      <style jsx global>{`
-        /* Mobile widget styles: ensure chart widgets have space to render
+                  if (!WidgetComponent || !widget.widget_type) return null;
+
+                  return (
+                    <div key={widget.id} className="widget-container">
+                      {isEditMode && (
+                        <>
+                          <button
+                            onClick={() => handleRemoveWidget(widget.id)}
+                            className="absolute top-2 right-2 z-20 w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200 transition-colors"
+                            title="Remove widget"
+                          >
+                            <X className="h-4 w-4 text-gray-500" />
+                          </button>
+                          <div
+                            className="drag-handle absolute top-0 left-0 right-0 h-8 cursor-move bg-blue-500/10 border-2 border-blue-500 border-dashed rounded-t-lg flex items-center justify-center z-10"
+                            style={{ borderColor: primaryColor }}
+                          >
+                            <span
+                              className="text-xs font-medium"
+                              style={{ color: primaryColor }}
+                            >
+                              Drag to move
+                            </span>
+                          </div>
+                        </>
+                      )}
+                      <div className={isEditMode ? "pt-8 h-full" : "h-full"}>
+                        <WidgetComponent
+                          primaryColor={primaryColor}
+                          {...({} as any)}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </ResponsiveGridLayout>
+            )}
+          </div>
+        )}
+
+        <style jsx global>{`
+          /* Mobile widget styles: ensure chart widgets have space to render
         - override child .h-full so cards don't collapse when parent has no height
         - provide a modest min-height so Recharts' ResponsiveContainer has room */
-        .widget-container-mobile {
-          position: relative;
-          min-height: 0;
-        }
+          .widget-container-mobile {
+            position: relative;
+            min-height: 0;
+          }
 
-        /* When stacked on mobile, allow the inner card to size to content and give charts room */
-        .widget-container-mobile > * {
-          height: auto !important;
-          min-height: 140px; /* small sensible height for chart widgets on mobile */
-        }
+          /* When stacked on mobile, allow the inner card to size to content and give charts room */
+          .widget-container-mobile > * {
+            height: auto !important;
+            min-height: 140px; /* small sensible height for chart widgets on mobile */
+          }
 
-        /* Ensure the card content area (where charts mount) has a min-height so
+          /* Ensure the card content area (where charts mount) has a min-height so
            ResponsiveContainer with height=\"100%\" can calculate sizes reliably */
-        .widget-container-mobile [data-slot="card-content"] {
-          min-height: 120px;
-          height: auto !important;
-        }
-        /* Desktop/Tablet grid styles */
-        .react-grid-layout {
-          position: relative;
-        }
-
-        .react-grid-item {
-          transition: all 200ms ease;
-          transition-property: left, top;
-          box-sizing: border-box;
-        }
-
-        .react-grid-item.cssTransforms {
-          transition-property: transform;
-        }
-
-        .react-grid-item.resizing {
-          transition: none;
-          z-index: 100;
-        }
-
-        .react-grid-item.react-draggable-dragging {
-          transition: none;
-          z-index: 100;
-        }
-
-        .widget-container {
-          height: 100%;
-          width: 100%;
-          position: relative;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .widget-container > div:last-child {
-          height: 100%;
-          width: 100%;
-          flex: 1;
-          min-height: 0;
-        }
-
-        .widget-container .h-full,
-        .widget-container > div > * {
-          height: 100%;
-        }
-
-        .edit-mode .react-grid-item {
-          border: 2px dashed transparent;
-          border-radius: 0.5rem;
-        }
-
-        .edit-mode .react-grid-item:hover {
-          border-color: ${primaryColor};
-          background: rgba(59, 130, 246, 0.05);
-        }
-
-        /* Visual grid snap indicators */
-        .edit-mode .react-grid-layout::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-image: repeating-linear-gradient(
-            to right,
-            transparent,
-            transparent calc(100% / 12 - 1px),
-            rgba(59, 130, 246, 0.1) calc(100% / 12 - 1px),
-            rgba(59, 130, 246, 0.1) calc(100% / 12)
-          );
-          pointer-events: none;
-          z-index: 0;
-        }
-
-        /* Highlight major snap points (3-column intervals) */
-        .edit-mode .react-grid-layout::after {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-image: repeating-linear-gradient(
-            to right,
-            transparent,
-            transparent calc(100% / 4 - 2px),
-            rgba(59, 130, 246, 0.2) calc(100% / 4 - 2px),
-            rgba(59, 130, 246, 0.2) calc(100% / 4)
-          );
-          pointer-events: none;
-          z-index: 0;
-        }
-
-        .edit-mode .react-grid-item {
-          z-index: 1;
-        }
-
-        .react-grid-item.react-draggable-dragging {
-          z-index: 100 !important;
-        }
-
-        .drag-handle {
-          opacity: 0;
-          transition: opacity 200ms;
-        }
-
-        .edit-mode .react-grid-item:hover .drag-handle {
-          opacity: 1;
-        }
-
-        /* Tablet adjustments */
-        @media (min-width: 768px) and (max-width: 1024px) {
+          .widget-container-mobile [data-slot="card-content"] {
+            min-height: 120px;
+            height: auto !important;
+          }
+          /* Desktop/Tablet grid styles */
           .react-grid-layout {
-            margin: 0 -8px;
+            position: relative;
           }
-        }
 
-        /* Mobile: hide grid visuals */
-        @media (max-width: 767px) {
-          .react-grid-layout::before,
-          .react-grid-layout::after {
-            display: none;
+          .react-grid-item {
+            transition: all 200ms ease;
+            transition-property: left, top;
+            box-sizing: border-box;
           }
-        }
-      `}</style>
-    </div>
+
+          .react-grid-item.cssTransforms {
+            transition-property: transform;
+          }
+
+          .react-grid-item.resizing {
+            transition: none;
+            z-index: 100;
+          }
+
+          .react-grid-item.react-draggable-dragging {
+            transition: none;
+            z-index: 100;
+          }
+
+          .widget-container {
+            height: 100%;
+            width: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+          }
+
+          .widget-container > div:last-child {
+            height: 100%;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+          }
+
+          .widget-container .h-full,
+          .widget-container > div > * {
+            height: 100%;
+          }
+
+          .edit-mode .react-grid-item {
+            border: 2px dashed transparent;
+            border-radius: 0.5rem;
+          }
+
+          .edit-mode .react-grid-item:hover {
+            border-color: ${primaryColor};
+            background: rgba(59, 130, 246, 0.05);
+          }
+
+          /* Visual grid snap indicators */
+          .edit-mode .react-grid-layout::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: repeating-linear-gradient(
+              to right,
+              transparent,
+              transparent calc(100% / 12 - 1px),
+              rgba(59, 130, 246, 0.1) calc(100% / 12 - 1px),
+              rgba(59, 130, 246, 0.1) calc(100% / 12)
+            );
+            pointer-events: none;
+            z-index: 0;
+          }
+
+          /* Highlight major snap points (3-column intervals) */
+          .edit-mode .react-grid-layout::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: repeating-linear-gradient(
+              to right,
+              transparent,
+              transparent calc(100% / 4 - 2px),
+              rgba(59, 130, 246, 0.2) calc(100% / 4 - 2px),
+              rgba(59, 130, 246, 0.2) calc(100% / 4)
+            );
+            pointer-events: none;
+            z-index: 0;
+          }
+
+          .edit-mode .react-grid-item {
+            z-index: 1;
+          }
+
+          .react-grid-item.react-draggable-dragging {
+            z-index: 100 !important;
+          }
+
+          .drag-handle {
+            opacity: 0;
+            transition: opacity 200ms;
+          }
+
+          .edit-mode .react-grid-item:hover .drag-handle {
+            opacity: 1;
+          }
+
+          /* Tablet adjustments */
+          @media (min-width: 768px) and (max-width: 1024px) {
+            .react-grid-layout {
+              margin: 0 -8px;
+            }
+          }
+
+          /* Mobile: hide grid visuals */
+          @media (max-width: 767px) {
+            .react-grid-layout::before,
+            .react-grid-layout::after {
+              display: none;
+            }
+          }
+        `}</style>
+      </div>
+    </>
   );
 }

@@ -1,8 +1,8 @@
-// app/(dashboard)/[workspaceId]/layout.tsx
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabase";
 import { AppSidebar } from "@/components/ui/dashboard/Sidebar";
+import Script from "next/script";
 
 async function getWorkspaceData(workspaceId: string, userEmail: string) {
   if (!supabaseAdmin) {
@@ -120,12 +120,30 @@ export default async function WorkspaceLayout({
 
   return (
     <>
+      {/* Favicon - use dangerouslySetInnerHTML to inject into head safely */}
       {theme.favicon && (
-        <head>
-          <link rel="icon" href={theme.favicon} type="image/x-icon" />
-          <link rel="shortcut icon" href={theme.favicon} type="image/x-icon" />
-          <link rel="apple-touch-icon" href={theme.favicon} />
-        </head>
+        <Script
+          id="favicon"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              var link = document.createElement('link');
+              link.rel = 'icon';
+              link.href = '${theme.favicon}';
+              document.head.appendChild(link);
+              
+              var shortcut = document.createElement('link');
+              shortcut.rel = 'shortcut icon';
+              shortcut.href = '${theme.favicon}';
+              document.head.appendChild(shortcut);
+              
+              var apple = document.createElement('link');
+              apple.rel = 'apple-touch-icon';
+              apple.href = '${theme.favicon}';
+              document.head.appendChild(apple);
+            `,
+          }}
+        />
       )}
 
       <div

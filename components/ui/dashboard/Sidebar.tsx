@@ -117,6 +117,7 @@ export function AppSidebar({
         <Tooltip>
           <TooltipTrigger asChild>
             <button
+              data-onboarding="dashboard-settings"
               onClick={() => {
                 window.location.href = `/${
                   pathname.split("/")[1]
