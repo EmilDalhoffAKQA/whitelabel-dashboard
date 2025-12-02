@@ -13,7 +13,7 @@ function LoginPageInner() {
       document.cookie = "auth_token=; Max-Age=0; path=/";
       document.cookie = "user_info=; Max-Age=0; path=/";
       document.cookie = "current_workspace=; Max-Age=0; path=/";
-      
+
       // Remove the logout parameter from URL
       const url = new URL(window.location.href);
       url.searchParams.delete("logout");
