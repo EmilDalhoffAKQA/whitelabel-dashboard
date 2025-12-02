@@ -76,7 +76,7 @@ export function AppSidebar({
         )}
       </div>
 
-      <div className="flex-1 flex items-center justify-center overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center">
         <div className="space-y-3 md:space-y-4 flex flex-col items-center py-4">
           {navItems.map((item) => {
             const Icon = iconMap[item.label] || Home;

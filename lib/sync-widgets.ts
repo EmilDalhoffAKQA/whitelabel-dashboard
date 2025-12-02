@@ -23,25 +23,47 @@ export async function syncWorkspaceWidgets(workspaceId: number) {
 
   if (missingWidgets.length === 0) return;
 
-  const { data: maxY } = await supabase
+  const { data: visibleLayouts } = await supabase
     .from("workspace_widget_layouts")
-    .select("y_position")
+    .select("x_position, y_position, width, height")
     .eq("workspace_id", workspaceId)
-    .order("y_position", { ascending: false })
-    .limit(1)
-    .single();
+    .eq("is_visible", true)
+    .order("y_position", { ascending: false });
 
-  let nextY = (maxY?.y_position || 0) + 2;
+  // Find the max Y position from visible widgets only
+  let nextY = visibleLayouts && visibleLayouts.length > 0 
+    ? Math.max(...visibleLayouts.map(l => l.y_position + l.height))
+    : 0;
 
-  const newLayouts = missingWidgets.map((widget) => ({
-    workspace_id: workspaceId,
-    widget_type_id: widget.id,
-    x_position: 0,
-    y_position: nextY++,
-    width: widget.width,
-    height: widget.height,
-    is_visible: false,
-  }));
+  const COLS = 12;
+  let currentX = 0;
+  let currentRowY = nextY;
+
+  const newLayouts = missingWidgets.map((widget) => {
+    const widgetWidth = widget.width;
+    
+    // Check if widget fits in current row
+    if (currentX + widgetWidth > COLS) {
+      // Move to next row
+      currentX = 0;
+      currentRowY += widget.height;
+    }
+
+    const layout = {
+      workspace_id: workspaceId,
+      widget_type_id: widget.id,
+      x_position: currentX,
+      y_position: currentRowY,
+      width: widget.width,
+      height: widget.height,
+      is_visible: false,
+    };
+
+    // Update position for next widget
+    currentX += widgetWidth;
+
+    return layout;
+  });
 
   await supabase.from("workspace_widget_layouts").insert(newLayouts);
 }
