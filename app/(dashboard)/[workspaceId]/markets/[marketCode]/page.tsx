@@ -53,7 +53,6 @@ export default function MarketDashboardPage() {
 
       setMarket(marketData);
 
-      // Ensure analytics snapshots exist for today for this market — if not, generate mock data
       const today = new Date().toISOString().split("T")[0];
       const { data: todaySnapshot } = await supabase
         .from("analytics_snapshots")
@@ -64,7 +63,6 @@ export default function MarketDashboardPage() {
         .single();
 
       if (!todaySnapshot) {
-        // call server-side route to refresh mock data for this market
         try {
           await fetch(`/api/markets/refresh`, {
             method: "POST",
@@ -104,7 +102,6 @@ export default function MarketDashboardPage() {
     return null;
   }
 
-  // Define which widgets to show for market dashboard
   const marketWidgets = [
     { component: "TotalConversationsWidget", width: 3, height: 1 },
     { component: "AverageResponseTimeWidget", width: 3, height: 1 },
@@ -117,7 +114,6 @@ export default function MarketDashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header with Back Button */}
       <div className="flex items-center gap-4">
         <Button
           variant="outline"
@@ -136,7 +132,6 @@ export default function MarketDashboardPage() {
         </div>
       </div>
 
-      {/* Market Info Card */}
       <Card className="border-gray-200">
         <CardContent className="pt-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -171,7 +166,6 @@ export default function MarketDashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Widgets Grid */}
       <div className="grid grid-cols-12 gap-4">
         {marketWidgets.map((widget, index) => {
           const WidgetComponent = getWidgetComponent(widget.component);

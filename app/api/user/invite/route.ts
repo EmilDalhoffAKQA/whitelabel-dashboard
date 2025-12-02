@@ -22,7 +22,6 @@ async function getAuth0ManagementToken() {
 export async function POST(req: NextRequest) {
   try {
     const { email, name, workspaceId, role } = await req.json();
-    console.log("Invite API called with:", { email, name, workspaceId, role });
     if (!email || !workspaceId) {
       return NextResponse.json(
         { error: "Missing email or workspaceId" },
@@ -76,7 +75,6 @@ export async function POST(req: NextRequest) {
         );
       }
       auth0User = await userRes.json();
-      console.log("Auth0 user created:", auth0User);
 
       // Generate password reset ticket (do NOT send via Auth0)
       const ticketRes = await fetch(
@@ -101,7 +99,6 @@ export async function POST(req: NextRequest) {
       } else {
         const ticket = await ticketRes.json();
         inviteLink = ticket.ticket;
-        console.log("Auth0 password reset ticket generated:", inviteLink);
       }
 
       // Fetch workspace name for the email

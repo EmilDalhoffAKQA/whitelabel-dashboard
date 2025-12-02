@@ -12,16 +12,8 @@ export function middleware(request: NextRequest) {
 
   const token = request.cookies.get("auth_token");
 
-  // Debug logging
-  console.log("[Middleware]", {
-    pathname,
-    hostname,
-    hasToken: !!token,
-    cookies: request.cookies.getAll().map((c) => c.name),
-  });
-
   // Allow public routes without token check
-  const publicRoutes = ["/login", "/welcome", "/onboarding", "/link-workspace"];
+  const publicRoutes = ["/login", "/welcome", "/onboarding"];
   const isPublicRoute = publicRoutes.some((route) =>
     pathname.startsWith(route)
   );
@@ -32,7 +24,6 @@ export function middleware(request: NextRequest) {
     if (hostname.startsWith("www.")) {
       loginUrl.host = hostname;
     }
-    console.log("[Middleware] Redirecting root to login - no token");
     return NextResponse.redirect(loginUrl);
   }
 
@@ -42,7 +33,6 @@ export function middleware(request: NextRequest) {
     if (hostname.startsWith("www.")) {
       workspacesUrl.host = hostname;
     }
-    console.log("[Middleware] Redirecting root to workspaces - has token");
     return NextResponse.redirect(workspacesUrl);
   }
 
@@ -62,7 +52,6 @@ export function middleware(request: NextRequest) {
     if (hostname.startsWith("www.")) {
       loginUrl.host = hostname;
     }
-    console.log("[Middleware] Redirecting to login - no token");
     return NextResponse.redirect(loginUrl);
   }
 

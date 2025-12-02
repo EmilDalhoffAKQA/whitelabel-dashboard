@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import { Market } from "@/lib/types";
-import { Globe, MessageSquare, TrendingUp, TrendingDown } from "lucide-react";
+import { Earth, MessageSquare, TrendingUp, TrendingDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface MarketStats {
@@ -140,7 +140,6 @@ export default function MarketsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Markets</h1>
         <p className="text-gray-600 mt-1">
@@ -168,7 +167,7 @@ export default function MarketsPage() {
                   color: primaryColor,
                 }}
               >
-                <Globe className="h-6 w-6" />
+                <Earth className="h-6 w-6" />
               </div>
             </div>
           </CardContent>
@@ -202,13 +201,12 @@ export default function MarketsPage() {
         </Card>
       </div>
 
-      {/* Markets Grid */}
       {marketStats.length === 0 ? (
         <Card className="border-dashed border-2 border-gray-300">
           <CardContent className="pt-12 pb-12 text-center">
             <div className="flex flex-col items-center gap-4">
               <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
-                <Globe className="h-8 w-8 text-gray-400" />
+                <Earth className="h-8 w-8 text-gray-400" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">
@@ -236,92 +234,91 @@ export default function MarketsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {marketStats.map(({ market, today, yesterday }) => {
-          const trend =
-            yesterday.conversations > 0
-              ? Math.round(
-                  ((today.conversations - yesterday.conversations) /
-                    yesterday.conversations) *
-                    100
-                )
-              : 0;
+            const trend =
+              yesterday.conversations > 0
+                ? Math.round(
+                    ((today.conversations - yesterday.conversations) /
+                      yesterday.conversations) *
+                      100
+                  )
+                : 0;
 
-          return (
-            <Card
-              key={market.id}
-              className="border-gray-200 hover:shadow-lg transition-all cursor-pointer"
-              onClick={() =>
-                router.push(`/${workspaceId}/markets/${market.market_code}`)
-              }
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between">
+            return (
+              <Card
+                key={market.id}
+                className="border-gray-200 hover:shadow-lg transition-all cursor-pointer"
+                onClick={() =>
+                  router.push(`/${workspaceId}/markets/${market.market_code}`)
+                }
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-lg font-semibold">
+                        {market.name}
+                      </CardTitle>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {market.market_code} • {market.language}
+                      </p>
+                    </div>
+                    <Badge
+                      className="text-xs"
+                      style={{
+                        backgroundColor: market.is_active
+                          ? `${primaryColor}15`
+                          : "#f3f4f6",
+                        color: market.is_active ? primaryColor : "#6b7280",
+                        border: market.is_active
+                          ? `1px solid ${primaryColor}30`
+                          : "1px solid #e5e7eb",
+                      }}
+                    >
+                      {market.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Main Stats */}
                   <div>
-                    <CardTitle className="text-lg font-semibold">
-                      {market.name}
-                    </CardTitle>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {market.market_code} • {market.language}
+                    <p className="text-xs text-gray-500 mb-1">
+                      Conversations Today
                     </p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-2xl font-bold text-gray-900">
+                        {today.conversations}
+                      </p>
+                      {trend !== 0 && (
+                        <div
+                          className={`flex items-center gap-1 text-xs font-medium ${
+                            trend > 0 ? "text-green-600" : "text-red-600"
+                          }`}
+                        >
+                          {trend > 0 ? (
+                            <TrendingUp className="h-3 w-3" />
+                          ) : (
+                            <TrendingDown className="h-3 w-3" />
+                          )}
+                          <span>{Math.abs(trend)}%</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <Badge
-                    className="text-xs"
-                    style={{
-                      backgroundColor: market.is_active
-                        ? `${primaryColor}15`
-                        : "#f3f4f6",
-                      color: market.is_active ? primaryColor : "#6b7280",
-                      border: market.is_active
-                        ? `1px solid ${primaryColor}30`
-                        : "1px solid #e5e7eb",
-                    }}
-                  >
-                    {market.is_active ? "Active" : "Inactive"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Main Stats */}
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">
-                    Conversations Today
-                  </p>
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-2xl font-bold text-gray-900">
-                      {today.conversations}
-                    </p>
-                    {trend !== 0 && (
-                      <div
-                        className={`flex items-center gap-1 text-xs font-medium ${
-                          trend > 0 ? "text-green-600" : "text-red-600"
-                        }`}
-                      >
-                        {trend > 0 ? (
-                          <TrendingUp className="h-3 w-3" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3" />
-                        )}
-                        <span>{Math.abs(trend)}%</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
 
-                {/* Satisfaction */}
-                <div className="pt-3 border-t border-gray-100">
-                  <p className="text-xs text-gray-500 mb-1">
-                    Avg. Satisfaction
-                  </p>
-                  <p
-                    className="text-lg font-bold"
-                    style={{ color: primaryColor }}
-                  >
-                    {today.satisfaction.toFixed(1)}/5.0
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+                  <div className="pt-3 border-t border-gray-100">
+                    <p className="text-xs text-gray-500 mb-1">
+                      Avg. Satisfaction
+                    </p>
+                    <p
+                      className="text-lg font-bold"
+                      style={{ color: primaryColor }}
+                    >
+                      {today.satisfaction.toFixed(1)}/5.0
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

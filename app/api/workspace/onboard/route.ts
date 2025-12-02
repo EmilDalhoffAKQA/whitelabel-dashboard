@@ -85,8 +85,6 @@ export async function POST(req: NextRequest) {
       if (marketsError) {
         console.error("Markets seeding error:", marketsError);
         // Don't fail the whole onboarding if markets fail
-      } else {
-        console.log("Default markets seeded successfully");
       }
     } catch (marketsErr) {
       console.error("Markets seeding exception:", marketsErr);
@@ -190,9 +188,6 @@ export async function POST(req: NextRequest) {
           { status: 500 }
         );
       }
-
-      // Optional: log the inserted/updated row for debugging
-      console.log("user_workspaces upsert result:", uwData);
     } catch (err) {
       console.error("User workspace assignment exception:", err);
       return NextResponse.json(
@@ -207,13 +202,6 @@ export async function POST(req: NextRequest) {
     // Step 5: Send invitation email with password setup link
     if (inviteLink) {
       try {
-        console.log("Attempting to send email to:", body.adminEmail);
-        console.log("Mailjet credentials present:", {
-          apiKey: !!process.env.MAILJET_API_KEY,
-          apiSecret: !!process.env.MAILJET_API_SECRET,
-          fromEmail: process.env.MAILJET_FROM_EMAIL,
-        });
-
         const { sendInviteEmail } = await import("@/lib/mailjet");
         const result = await sendInviteEmail({
           to: body.adminEmail,
@@ -221,7 +209,6 @@ export async function POST(req: NextRequest) {
           inviteLink,
           workspaceName: workspace.name,
         });
-        console.log("Email sent successfully:", result);
       } catch (emailError) {
         console.error("Email sending error (full details):", emailError);
         console.error(

@@ -13,7 +13,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 interface User {
   id: number;
@@ -259,7 +259,6 @@ export default function UsersPage() {
         </Card>
       )}
 
-      {/* Users List */}
       <Card>
         <CardHeader>
           <CardTitle>Workspace Members ({users.length})</CardTitle>
@@ -301,11 +300,10 @@ export default function UsersPage() {
                   >
                     {user.role}
                   </span>
-                  {/* Uncomment if you want delete functionality
+
                   <button className="text-gray-400 hover:text-red-600 transition-colors">
                     <Trash2 className="w-4 h-4" />
                   </button>
-                  */}
                 </div>
               </div>
             ))}

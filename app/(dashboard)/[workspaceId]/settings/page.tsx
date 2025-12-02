@@ -116,7 +116,6 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
         <p className="text-gray-600 mt-1">
@@ -124,7 +123,6 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      {/* Success/Error Messages */}
       {success && (
         <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl">
           Theme saved successfully! Refreshing to apply changes...
@@ -136,9 +134,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Theme Settings */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: Form */}
         <Card>
           <CardHeader>
             <CardTitle>Workspace Branding</CardTitle>
@@ -218,7 +214,6 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Right: Preview */}
         <div className="hidden lg:block">
           <div className="sticky top-6">
             <Card>

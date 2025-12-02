@@ -53,15 +53,13 @@ export default function DashboardPage() {
     loadDashboard();
   }, [workspaceId]);
 
-  // Adjust rowHeight responsively so medium/tablet view shows more widgets
   useEffect(() => {
     function updateRowHeight() {
       const w = window.innerWidth;
-      // mobile uses stacked layout, tablets/small desktops use a smaller row height
       if (w < 1024 && w >= 768) {
-        setRowHeight(120); // medium/tablet: reduce height to fit more
+        setRowHeight(120);
       } else if (w < 768) {
-        setRowHeight(100); // small screens (shouldn't reach here for grid but keep safe)
+        setRowHeight(100);
       } else {
         setRowHeight(GRID_CONFIG.rowHeight);
       }
@@ -310,7 +308,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-4 md:space-y-6 px-4 md:px-0">
-      {/* Mobile-optimized Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">
@@ -392,7 +389,6 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Mobile Edit Controls - Sheet */}
         <div className="sm:hidden">
           {!isEditMode ? (
             <Button
@@ -459,7 +455,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Widget Grid */}
       {widgets.length === 0 ? (
         <Card>
           <CardContent className="pt-6 text-center py-12">
@@ -474,7 +469,7 @@ export default function DashboardPage() {
       ) : (
         <div className={isEditMode ? "edit-mode" : ""}>
           {isMobile ? (
-            // Mobile: Stack widgets vertically (no dragging)
+            // Mobile: Stack widgets vertically
             <div className="space-y-4">
               {widgets.map((widget) => {
                 const WidgetComponent = getWidgetComponent(

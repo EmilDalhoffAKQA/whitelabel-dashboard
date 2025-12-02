@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   LogOut,
+  MessageSquare,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,8 @@ const iconMap: Record<string, any> = {
   Markets: Earth,
   Users: UserRoundPlus,
   Settings: Brush,
+  Chat: MessageSquare,
+  "Chat Simulator": MessageSquare,
 };
 
 export function AppSidebar({
@@ -52,7 +55,6 @@ export function AppSidebar({
 
   const SidebarContent = () => (
     <>
-      {/* Logo - Responsive sizing */}
       <div className="pb-6 md:pb-8 flex-shrink-0">
         {logo ? (
           <div className="w-16 h-16 md:w-20 md:h-20 rounded-3xl bg-white flex items-center justify-center mx-auto">
@@ -74,7 +76,6 @@ export function AppSidebar({
         )}
       </div>
 
-      {/* Navigation - Centered */}
       <div className="flex-1 flex items-center justify-center overflow-y-auto">
         <div className="space-y-3 md:space-y-4 flex flex-col items-center py-4">
           {navItems.map((item) => {
@@ -100,7 +101,6 @@ export function AppSidebar({
         </div>
       </div>
 
-      {/* Footer - Dashboard Settings and Logout */}
       <div className="space-y-3 flex flex-col items-center flex-shrink-0 pb-6">
         <button
           onClick={() => {

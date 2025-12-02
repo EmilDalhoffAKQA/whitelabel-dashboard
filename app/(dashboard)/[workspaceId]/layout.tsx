@@ -94,15 +94,12 @@ export default async function WorkspaceLayout({
       roles: ["admin", "editor"],
     },
     {
-      href: `/${workspaceId}/users`,
-      label: "Users",
-      roles: ["admin"],
+      href: `/${workspaceId}/chat`,
+      label: "Chat Simulator",
+      roles: ["admin", "editor"],
     },
-    {
-      href: `/${workspaceId}/settings`,
-      label: "Settings",
-      roles: ["admin"],
-    },
+    { href: `/${workspaceId}/users`, label: "Users", roles: ["admin"] },
+    { href: `/${workspaceId}/settings`, label: "Settings", roles: ["admin"] },
   ];
 
   const filteredNavItems = navItems.filter((item) =>
