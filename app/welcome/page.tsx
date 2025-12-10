@@ -14,7 +14,7 @@ export default function OnboardingLandingPage() {
         </p>
         <div className="pt-2">
           <Link href="/onboarding">
-            <Button variant="blue" size="lg" className="w-full sm:w-auto px-8">
+            <Button variant="black" size="lg" className="w-full sm:w-auto px-8">
               Start Free Setup
             </Button>
           </Link>

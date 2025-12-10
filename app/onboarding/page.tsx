@@ -194,8 +194,8 @@ export default function OnboardingPage() {
               <Button
                 onClick={() => setStep(2)}
                 disabled={!canProceedStep1}
-                variant="blue"
-                className="w-full"
+                variant="black"
+                className="w-full bg-black"
               >
                 Continue
               </Button>

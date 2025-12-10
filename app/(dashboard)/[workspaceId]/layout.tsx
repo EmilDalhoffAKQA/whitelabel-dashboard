@@ -12,7 +12,7 @@ async function getWorkspaceData(workspaceId: string, userEmail: string) {
 
   const { data: user, error: userError } = await supabaseAdmin
     .from("users")
-    .select("id")
+    .select("id, is_superadmin")
     .eq("email", userEmail)
     .single();
 
@@ -21,6 +21,26 @@ async function getWorkspaceData(workspaceId: string, userEmail: string) {
     return null;
   }
 
+  // SUPERADMIN: Can access ANY workspace without membership
+  if (user.is_superadmin) {
+    const { data: workspace, error: wsError } = await supabaseAdmin
+      .from("workspaces")
+      .select("*")
+      .eq("id", workspaceId)
+      .single();
+
+    if (wsError || !workspace) {
+      console.error("Workspace error:", wsError);
+      return null;
+    }
+
+    return {
+      workspace,
+      role: "admin", // Superadmin gets admin role everywhere
+    };
+  }
+
+  // REGULAR USER: Must be a member
   const { data: userWorkspace, error: uwError } = await supabaseAdmin
     .from("user_workspaces")
     .select("role, workspace_id")

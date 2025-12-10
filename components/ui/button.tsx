@@ -22,7 +22,7 @@ const buttonVariants = cva(
         dashboard:
           "bg-white border border-gray-200 text-gray-900 hover:bg-gray-50",
         cancel: "bg-red-500 border border-gray-200 text-white hover:bg-red-600",
-        blue: "bg-blue-600 text-white hover:bg-blue-700 font-semibold",
+        black: "bg-black text-white hover:bg-gray-800 font-semibold",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
