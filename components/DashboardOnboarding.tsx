@@ -261,17 +261,13 @@ export default function DashboardOnboarding({
               {step.description}
             </p>
 
-            {/* Progress bar */}
             <div className="relative h-2.5 bg-secondary rounded-full overflow-hidden border border-border">
               <div
-                className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500 ease-out relative shadow-sm"
+                className="h-full bg-black transition-all duration-500 ease-out relative shadow-sm"
                 style={{
                   width: `${((currentStep + 1) / STEPS.length) * 100}%`,
                 }}
-              >
-                {/* Shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
-              </div>
+              ></div>
             </div>
 
             {/* Actions */}
