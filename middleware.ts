@@ -5,7 +5,6 @@ export function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
   const pathname = request.nextUrl.pathname;
 
-  // Skip middleware for API routes entirely to avoid interfering with auth flow
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
