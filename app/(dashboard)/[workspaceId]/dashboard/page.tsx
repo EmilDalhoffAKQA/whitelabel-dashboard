@@ -45,6 +45,7 @@ export default function DashboardPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
@@ -92,6 +93,19 @@ export default function DashboardPage() {
   useEffect(() => {
     loadDashboard();
   }, [workspaceId]);
+
+  // Warn user about unsaved changes when leaving page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   useEffect(() => {
     function updateRowHeight() {
@@ -164,6 +178,7 @@ export default function DashboardPage() {
   ) => {
     if (!isEditMode) return;
 
+    setHasUnsavedChanges(true); // Mark as changed when user drags
     const snappedX = snapToGrid(newItem.x, newItem.w);
     const maxX = GRID_CONFIG.cols - newItem.w;
     const constrainedX = Math.max(0, Math.min(snappedX, maxX));
@@ -264,6 +279,7 @@ export default function DashboardPage() {
       if (!response.ok) throw new Error("Failed to save layout");
       await loadDashboard();
       setIsEditMode(false);
+      setHasUnsavedChanges(false); // Clear unsaved changes flag
       toast.success("Dashboard layout saved!", {
         description: "Your widget layout has been updated successfully.",
       });
@@ -279,12 +295,20 @@ export default function DashboardPage() {
   };
 
   const handleCancelEdit = () => {
+    if (hasUnsavedChanges) {
+      const confirm = window.confirm(
+        "You have unsaved changes. Are you sure you want to discard them?"
+      );
+      if (!confirm) return;
+    }
     setLayout(widgetsToLayout(widgets));
     setIsEditMode(false);
+    setHasUnsavedChanges(false);
   };
 
   const handleRemoveWidget = async (widgetId: string | number) => {
     try {
+      setHasUnsavedChanges(true); // Mark as changed when widget removed
       const { error } = await supabase
         .from("workspace_widget_layouts")
         .update({ is_visible: false })
@@ -309,6 +333,7 @@ export default function DashboardPage() {
 
   const handleAddWidget = async (widgetId: string | number) => {
     try {
+      setHasUnsavedChanges(true); // Mark as changed when widget added
       // Find the widget to add
       const widgetToAdd = hiddenWidgets.find(
         (w) => w.id.toString() === widgetId.toString()
