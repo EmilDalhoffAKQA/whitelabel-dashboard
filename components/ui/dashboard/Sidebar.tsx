@@ -147,8 +147,7 @@ export function AppSidebar({
             <DropdownMenuSeparator className="bg-gray-200" />
             <div className="max-h-80 overflow-y-auto">
               {workspaces.map((workspace) => {
-                const isActive =
-                  workspace.id.toString() === currentWorkspaceId;
+                const isActive = workspace.id.toString() === currentWorkspaceId;
                 return (
                   <DropdownMenuItem
                     key={workspace.id}
