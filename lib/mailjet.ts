@@ -74,7 +74,8 @@ export async function sendExistingUserInviteEmail({
   loginUrl?: string;
 }) {
   const client = getMailjetClient();
-  const login = loginUrl || process.env.NEXTAUTH_URL || "http://localhost:3000/login";
+  const login =
+    loginUrl || process.env.NEXTAUTH_URL || "http://localhost:3000/login";
 
   const result = await client.post("send", { version: "v3.1" }).request({
     Messages: [

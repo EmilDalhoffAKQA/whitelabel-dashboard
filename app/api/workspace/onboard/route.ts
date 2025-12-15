@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
         body.adminName,
         randomPassword
       );
-      
+
       isNewUser = true; // Successfully created new user
 
       // Generate password reset ticket (used as invite link)
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
           auth0User = existing;
           isNewUser = false; // Existing user
           console.log("Reusing existing Auth0 user:", auth0User.user_id);
-          
+
           // No password reset ticket needed for existing users
           // They will receive a different email
         } catch (fetchErr: any) {

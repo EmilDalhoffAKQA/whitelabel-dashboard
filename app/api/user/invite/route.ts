@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
               }),
             }
           );
-          
+
           let inviteLink = null;
           if (ticketRes.ok) {
             const ticket = await ticketRes.json();
@@ -253,14 +253,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      user: dbUser, 
+      user: dbUser,
       auth0User,
       isNewUser,
       message: isNewUser
         ? "User invited successfully. They will receive an email to set their password."
-        : "User added to workspace successfully. They will receive a notification email."
+        : "User added to workspace successfully. They will receive a notification email.",
     });
   } catch (e) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
