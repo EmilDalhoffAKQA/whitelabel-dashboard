@@ -1,7 +1,7 @@
 // components/ui/dashboard/Sidebar.tsx
 "use client";
 import * as React from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
   UserRoundPlus,
@@ -77,6 +77,7 @@ export function AppSidebar({
   currentWorkspaceName,
 }: AppSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const isMobile = useIsMobile();
   const [open, setOpen] = React.useState(false);
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
@@ -147,7 +148,7 @@ export function AppSidebar({
                     key={workspace.id}
                     onClick={() => {
                       if (!isActive) {
-                        window.location.href = `/${workspace.id}/dashboard`;
+                        router.push(`/${workspace.id}/dashboard`);
                       }
                     }}
                     className={`rounded-lg px-3 py-2.5 cursor-pointer transition-colors ${
@@ -204,7 +205,7 @@ export function AppSidebar({
             <DropdownMenuSeparator className="my-2 bg-gray-200" />
             <DropdownMenuItem
               onClick={() => {
-                window.location.href = "/workspaces";
+                router.push("/workspaces");
               }}
               className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-gray-50"
             >
