@@ -72,7 +72,7 @@ export async function createAuth0User(
   password: string
 ) {
   const token = await getManagementApiToken();
-  
+
   // Normalize email to lowercase for consistent Auth0 storage
   const normalizedEmail = email.toLowerCase();
 

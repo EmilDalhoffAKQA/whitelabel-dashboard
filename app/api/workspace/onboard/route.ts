@@ -167,21 +167,27 @@ export async function POST(req: NextRequest) {
     // Step 3: Create or update user in Supabase
     let { data: user, error: userError } = await supabaseAdmin
       .from("users")
-      .upsert({
-        email: body.adminEmail,
-        name: body.adminName,
-        auth0_id: auth0User?.user_id,
-      })
+      .upsert(
+        {
+          email: body.adminEmail,
+          name: body.adminName,
+          auth0_id: auth0User?.user_id,
+        },
+        {
+          onConflict: "auth0_id", // Update existing user if auth0_id already exists
+          ignoreDuplicates: false, // Always update, don't ignore
+        }
+      )
       .select()
       .single();
 
-    // If upsert didn't return the user object (some Supabase responses can vary), fetch by email
+    // If upsert didn't return the user object (some Supabase responses can vary), fetch by auth0_id
     if (userError || !user || !user.id) {
       if (userError) console.warn("Supabase upsert user warning:", userError);
       const { data: fetchedUser, error: fetchErr } = await supabaseAdmin
         .from("users")
         .select()
-        .eq("email", body.adminEmail)
+        .eq("auth0_id", auth0User?.user_id)
         .single();
 
       if (fetchErr || !fetchedUser) {
