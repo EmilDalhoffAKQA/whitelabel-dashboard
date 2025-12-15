@@ -182,7 +182,7 @@ export default function UsersPage() {
                     onChange={(e) =>
                       setInviteForm({ ...inviteForm, name: e.target.value })
                     }
-                    placeholder="Your Full Name"
+                    placeholder="Employees Full Name"
                     required
                     className="border border-gray-200 rounded-lg focus:ring-2  focus:b
                      px-3 py-2 bg-white text-gray-900 placeholder-gray-400 shadow-sm"
@@ -198,7 +198,7 @@ export default function UsersPage() {
                     onChange={(e) =>
                       setInviteForm({ ...inviteForm, email: e.target.value })
                     }
-                    placeholder="Your Email Address"
+                    placeholder="Employees Email Address"
                     required
                     className="border border-gray-200 rounded-lg focus:ring-2 px-3 py-2 bg-white text-gray-900 placeholder-gray-400 shadow-sm"
                   />
