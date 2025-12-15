@@ -28,6 +28,7 @@ import { SquarePen, Save, X, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import DashboardOnboarding from "@/components/DashboardOnboarding";
 import { useOnboarding } from "@/hooks/use-onboarding";
+import { toast } from "sonner";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
@@ -263,9 +264,15 @@ export default function DashboardPage() {
       if (!response.ok) throw new Error("Failed to save layout");
       await loadDashboard();
       setIsEditMode(false);
+      toast.success("Dashboard layout saved!", {
+        description: "Your widget layout has been updated successfully.",
+      });
     } catch (error) {
       console.error("Error saving layout:", error);
-      alert("Failed to save layout. Please try again.");
+      toast.error("Failed to save layout", {
+        description:
+          "Please try again or contact support if the issue persists.",
+      });
     } finally {
       setIsSaving(false);
     }
