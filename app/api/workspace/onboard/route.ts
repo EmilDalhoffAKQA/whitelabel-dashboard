@@ -117,23 +117,37 @@ export async function POST(req: NextRequest) {
         auth0Error.statusCode === 409;
 
       if (isAlreadyExists) {
+        console.log(
+          `User ${body.adminEmail} already exists in Auth0, attempting to fetch existing user...`
+        );
         try {
           const existing = await getUserByEmail(body.adminEmail);
+          console.log("Fetched existing user:", existing?.user_id);
           if (!existing || !existing.user_id) {
+            console.error("Failed to retrieve existing user details");
             return NextResponse.json(
               { error: "Auth0 user exists but could not be retrieved" },
               { status: 500 }
             );
           }
           auth0User = existing;
+          console.log("Reusing existing Auth0 user:", auth0User.user_id);
 
           // Generate password reset ticket for existing user
-          const ticket = await generatePasswordResetTicket(auth0User.user_id);
-          inviteLink = ticket.ticket;
+          try {
+            const ticket = await generatePasswordResetTicket(
+              auth0User.user_id
+            );
+            inviteLink = ticket.ticket;
+            console.log("Generated password reset ticket for existing user");
+          } catch (ticketErr) {
+            console.error("Failed to generate ticket, continuing anyway:", ticketErr);
+            // Continue without ticket - user can request password reset manually
+          }
         } catch (fetchErr: any) {
           console.error("Auth0 fetch error:", fetchErr);
           return NextResponse.json(
-            { error: `Auth0 error: ${fetchErr.message || fetchErr}` },
+            { error: `Failed to fetch existing user: ${fetchErr.message || fetchErr}` },
             { status: 500 }
           );
         }

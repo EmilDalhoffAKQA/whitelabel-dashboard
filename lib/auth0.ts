@@ -13,10 +13,14 @@ export async function getUserByEmail(email: string) {
   );
 
   if (!response.ok) {
-    throw new Error("Failed to get user");
+    const errorData = await response.json().catch(() => ({}));
+    const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}`;
+    console.error(`Failed to get user by email ${email}:`, errorMessage);
+    throw new Error(`Failed to get user: ${errorMessage}`);
   }
 
   const users = await response.json();
+  console.log(`Found ${users.length} user(s) with email ${email}`);
   return users[0] || null;
 }
 interface ManagementApiToken {
