@@ -53,6 +53,20 @@ export async function POST(req: NextRequest) {
 
     if (workspaceError || !workspace) {
       console.error("Workspace creation error:", workspaceError);
+
+      // Check if it's a duplicate name error
+      if (
+        workspaceError?.code === "23505" &&
+        workspaceError?.details?.includes("name")
+      ) {
+        return NextResponse.json(
+          {
+            error: `A workspace named "${body.companyName}" already exists. Please choose a different name.`,
+          },
+          { status: 409 } // 409 Conflict
+        );
+      }
+
       return NextResponse.json(
         { error: "Failed to create workspace" },
         { status: 500 }
