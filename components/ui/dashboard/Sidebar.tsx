@@ -104,34 +104,26 @@ export function AppSidebar({
 
   const SidebarContent = () => (
     <TooltipProvider delayDuration={300}>
-      <div className="pb-6 md:pb-8 flex-shrink-0">
+      <div className="pb-6 md:pb-8 flex-shrink-0 relative">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="relative group cursor-pointer">
+            <button className="relative group cursor-pointer focus:outline-none w-full">
               {logo ? (
-                <div className="w-16 h-16 md:w-20 md:h-20 rounded-3xl bg-white flex items-center justify-center mx-auto transition-all group-hover:shadow-md group-hover:scale-105">
-                  <div className="max-w-[48px] max-h-[48px] md:max-w-[64px] md:max-h-[64px] w-full h-full flex items-center justify-center">
-                    <img
-                      src={logo}
-                      alt="Logo"
-                      className="object-contain w-full h-full"
-                    />
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ChevronDown className="w-3 h-3 text-white" />
-                  </div>
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-3xl bg-white flex items-center justify-center mx-auto transition-all duration-200 group-hover:rounded-2xl border-2 border-transparent group-hover:border-gray-200">
+                  <img
+                    src={logo}
+                    alt="Logo"
+                    className="w-12 h-12 md:w-16 md:h-16 object-contain"
+                  />
                 </div>
               ) : (
                 <div
-                  className="w-16 h-16 md:w-20 md:h-20 rounded-3xl flex items-center justify-center mx-auto transition-all group-hover:shadow-md group-hover:scale-105 relative"
+                  className="w-16 h-16 md:w-20 md:h-20 rounded-3xl flex items-center justify-center mx-auto transition-all duration-200 group-hover:rounded-2xl"
                   style={{ backgroundColor: primaryColor }}
                 >
                   <span className="text-white font-bold text-xl md:text-2xl">
-                    D
+                    {currentWorkspaceName.charAt(0).toUpperCase()}
                   </span>
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ChevronDown className="w-3 h-3 text-white" />
-                  </div>
                 </div>
               )}
             </button>
@@ -139,13 +131,15 @@ export function AppSidebar({
           <DropdownMenuContent
             side="right"
             align="start"
-            className="w-72 bg-white border-gray-200 shadow-lg"
+            className="w-80 bg-white border border-gray-200 shadow-xl rounded-xl p-2"
+            sideOffset={12}
           >
-            <DropdownMenuLabel className="text-gray-900 font-semibold">
-              Switch Workspace
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-gray-200" />
-            <div className="max-h-80 overflow-y-auto">
+            <div className="px-3 py-2">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Workspaces
+              </p>
+            </div>
+            <div className="max-h-96 overflow-y-auto space-y-1">
               {workspaces.map((workspace) => {
                 const isActive = workspace.id.toString() === currentWorkspaceId;
                 return (
@@ -156,50 +150,67 @@ export function AppSidebar({
                         window.location.href = `/${workspace.id}/dashboard`;
                       }
                     }}
-                    className={`cursor-pointer py-3 ${
-                      isActive
-                        ? "bg-blue-50 text-blue-700"
-                        : "text-gray-900 hover:bg-gray-50"
+                    className={`rounded-lg px-3 py-2.5 cursor-pointer transition-colors ${
+                      isActive ? "bg-blue-50" : "hover:bg-gray-50"
                     }`}
                   >
                     <div className="flex items-center gap-3 w-full">
                       {workspace.logo_url ? (
-                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                        <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center flex-shrink-0">
                           <img
                             src={workspace.logo_url}
                             alt={workspace.name}
-                            className="w-8 h-8 object-contain"
+                            className="w-7 h-7 object-contain"
                           />
                         </div>
                       ) : (
                         <div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                          style={{ backgroundColor: primaryColor }}
+                          className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{
+                            backgroundColor: isActive
+                              ? primaryColor
+                              : "#e5e7eb",
+                          }}
                         >
-                          <span className="text-white font-semibold text-sm">
+                          <span
+                            className={`font-semibold text-sm ${
+                              isActive ? "text-white" : "text-gray-600"
+                            }`}
+                          >
                             {workspace.name.charAt(0).toUpperCase()}
                           </span>
                         </div>
                       )}
-                      <span className="flex-1 truncate font-medium">
-                        {workspace.name}
-                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`font-medium text-sm truncate ${
+                            isActive ? "text-gray-900" : "text-gray-700"
+                          }`}
+                        >
+                          {workspace.name}
+                        </p>
+                      </div>
                       {isActive && (
-                        <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                        <Check
+                          className="w-4 h-4 flex-shrink-0"
+                          style={{ color: primaryColor }}
+                        />
                       )}
                     </div>
                   </DropdownMenuItem>
                 );
               })}
             </div>
-            <DropdownMenuSeparator className="bg-gray-200" />
+            <DropdownMenuSeparator className="my-2 bg-gray-200" />
             <DropdownMenuItem
               onClick={() => {
                 window.location.href = "/workspaces";
               }}
-              className="text-gray-900 hover:bg-gray-50 cursor-pointer py-3 font-medium"
+              className="rounded-lg px-3 py-2.5 cursor-pointer hover:bg-gray-50"
             >
-              View all workspaces →
+              <span className="text-gray-700 font-medium text-sm">
+                View all workspaces →
+              </span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
