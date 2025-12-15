@@ -93,6 +93,7 @@ export async function POST(req: NextRequest) {
     // Step 2: Create user in Auth0
     let auth0User;
     let inviteLink = null;
+    let isNewUser = false;
 
     try {
       // Generate a strong random password
@@ -103,6 +104,8 @@ export async function POST(req: NextRequest) {
         body.adminName,
         randomPassword
       );
+      
+      isNewUser = true; // Successfully created new user
 
       // Generate password reset ticket (used as invite link)
       const ticket = await generatePasswordResetTicket(auth0User.user_id);
@@ -131,20 +134,11 @@ export async function POST(req: NextRequest) {
             );
           }
           auth0User = existing;
+          isNewUser = false; // Existing user
           console.log("Reusing existing Auth0 user:", auth0User.user_id);
-
-          // Generate password reset ticket for existing user
-          try {
-            const ticket = await generatePasswordResetTicket(auth0User.user_id);
-            inviteLink = ticket.ticket;
-            console.log("Generated password reset ticket for existing user");
-          } catch (ticketErr) {
-            console.error(
-              "Failed to generate ticket, continuing anyway:",
-              ticketErr
-            );
-            // Continue without ticket - user can request password reset manually
-          }
+          
+          // No password reset ticket needed for existing users
+          // They will receive a different email
         } catch (fetchErr: any) {
           console.error("Auth0 fetch error:", fetchErr);
           return NextResponse.json(
@@ -229,24 +223,35 @@ export async function POST(req: NextRequest) {
     // Note: Widgets are now global (workspace_id = NULL) and shared across all workspaces
     // No need to copy widgets per workspace anymore
 
-    // Step 5: Send invitation email with password setup link
-    if (inviteLink) {
-      try {
+    // Step 5: Send appropriate email based on user type
+    try {
+      if (isNewUser && inviteLink) {
+        // New user: Send welcome email with password setup link
         const { sendInviteEmail } = await import("@/lib/mailjet");
-        const result = await sendInviteEmail({
+        await sendInviteEmail({
           to: body.adminEmail,
           name: body.adminName,
           inviteLink,
           workspaceName: workspace.name,
         });
-      } catch (emailError) {
-        console.error("Email sending error (full details):", emailError);
-        console.error(
-          "Error message:",
-          emailError instanceof Error ? emailError.message : String(emailError)
-        );
-        // Continue anyway - user can request password reset
+        console.log("Sent new user welcome email to:", body.adminEmail);
+      } else {
+        // Existing user: Send workspace access notification
+        const { sendExistingUserInviteEmail } = await import("@/lib/mailjet");
+        await sendExistingUserInviteEmail({
+          to: body.adminEmail,
+          name: body.adminName,
+          workspaceName: workspace.name,
+        });
+        console.log("Sent existing user notification to:", body.adminEmail);
       }
+    } catch (emailError) {
+      console.error("Email sending error (full details):", emailError);
+      console.error(
+        "Error message:",
+        emailError instanceof Error ? emailError.message : String(emailError)
+      );
+      // Continue anyway - user can still access the workspace
     }
 
     return NextResponse.json({
@@ -255,8 +260,10 @@ export async function POST(req: NextRequest) {
         id: workspace.id,
         name: workspace.name,
       },
-      message:
-        "Workspace created successfully. Check your email to set your password.",
+      isNewUser,
+      message: isNewUser
+        ? "Workspace created successfully. Check your email to set your password."
+        : "Workspace created successfully. You can now log in with your existing credentials.",
     });
   } catch (error: any) {
     console.error("Onboarding error:", error);

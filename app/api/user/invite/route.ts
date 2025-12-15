@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Create user in Auth0 (send invite email)
     let mgmtToken, userRes, auth0User;
+    let isNewUser = false;
     try {
       mgmtToken = await getAuth0ManagementToken();
       // Generate a strong password (20+ chars, upper/lower/number/symbol)
@@ -110,31 +111,7 @@ export async function POST(req: NextRequest) {
         }
       } else {
         auth0User = await userRes.json();
-      }
-
-      // Generate password reset ticket (do NOT send via Auth0)
-      const ticketRes = await fetch(
-        `https://${process.env.AUTH0_DOMAIN}/api/v2/tickets/password-change`,
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            authorization: `Bearer ${mgmtToken}`,
-          },
-          body: JSON.stringify({
-            user_id: auth0User.user_id,
-            result_url:
-              process.env.NEXTAUTH_URL || "http://localhost:3000/login",
-          }),
-        }
-      );
-      let inviteLink = null;
-      if (!ticketRes.ok) {
-        const terr = await ticketRes.json();
-        console.error("Auth0 password reset ticket error:", terr);
-      } else {
-        const ticket = await ticketRes.json();
-        inviteLink = ticket.ticket;
+        isNewUser = true; // Successfully created new user
       }
 
       // Fetch workspace name for the email
@@ -154,18 +131,54 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Always send custom invite email using Mailjet, even if inviteLink is null
+      // Send appropriate email based on user type
       try {
-        const { sendInviteEmail } = await import("@/lib/mailjet");
-        await sendInviteEmail({
-          to: email,
-          name,
-          inviteLink: inviteLink || "",
-          workspaceName,
-        });
-        console.log("Custom invite email sent via Mailjet");
+        if (isNewUser) {
+          // Generate password reset ticket for new users
+          const ticketRes = await fetch(
+            `https://${process.env.AUTH0_DOMAIN}/api/v2/tickets/password-change`,
+            {
+              method: "POST",
+              headers: {
+                "content-type": "application/json",
+                authorization: `Bearer ${mgmtToken}`,
+              },
+              body: JSON.stringify({
+                user_id: auth0User.user_id,
+                result_url:
+                  process.env.NEXTAUTH_URL || "http://localhost:3000/login",
+              }),
+            }
+          );
+          
+          let inviteLink = null;
+          if (ticketRes.ok) {
+            const ticket = await ticketRes.json();
+            inviteLink = ticket.ticket;
+          }
+
+          if (inviteLink) {
+            const { sendInviteEmail } = await import("@/lib/mailjet");
+            await sendInviteEmail({
+              to: email,
+              name,
+              inviteLink,
+              workspaceName,
+            });
+            console.log("Sent new user invite email");
+          }
+        } else {
+          // Existing user - send notification
+          const { sendExistingUserInviteEmail } = await import("@/lib/mailjet");
+          await sendExistingUserInviteEmail({
+            to: email,
+            name,
+            workspaceName,
+          });
+          console.log("Sent existing user notification");
+        }
       } catch (mailErr) {
-        console.error("Failed to send custom invite email:", mailErr);
+        console.error("Failed to send invite email:", mailErr);
       }
     } catch (err) {
       console.error("Auth0 user creation exception:", err);
@@ -240,7 +253,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ user: dbUser, auth0User });
+    return NextResponse.json({ 
+      success: true,
+      user: dbUser, 
+      auth0User,
+      isNewUser,
+      message: isNewUser
+        ? "User invited successfully. They will receive an email to set their password."
+        : "User added to workspace successfully. They will receive a notification email."
+    });
   } catch (e) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
