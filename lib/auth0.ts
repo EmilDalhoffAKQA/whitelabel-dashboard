@@ -1,10 +1,13 @@
 export async function getUserByEmail(email: string) {
   const token = await getManagementApiToken();
 
+  // Normalize email to lowercase for consistent Auth0 lookup
+  const normalizedEmail = email.toLowerCase();
+
   const response = await fetch(
     `https://${
       process.env.AUTH0_DOMAIN
-    }/api/v2/users-by-email?email=${encodeURIComponent(email)}`,
+    }/api/v2/users-by-email?email=${encodeURIComponent(normalizedEmail)}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -16,12 +19,15 @@ export async function getUserByEmail(email: string) {
     const errorData = await response.json().catch(() => ({}));
     const errorMessage =
       errorData.message || errorData.error || `HTTP ${response.status}`;
-    console.error(`Failed to get user by email ${email}:`, errorMessage);
+    console.error(
+      `Failed to get user by email ${normalizedEmail}:`,
+      errorMessage
+    );
     throw new Error(`Failed to get user: ${errorMessage}`);
   }
 
   const users = await response.json();
-  console.log(`Found ${users.length} user(s) with email ${email}`);
+  console.log(`Found ${users.length} user(s) with email ${normalizedEmail}`);
   return users[0] || null;
 }
 interface ManagementApiToken {
@@ -66,6 +72,9 @@ export async function createAuth0User(
   password: string
 ) {
   const token = await getManagementApiToken();
+  
+  // Normalize email to lowercase for consistent Auth0 storage
+  const normalizedEmail = email.toLowerCase();
 
   const response = await fetch(
     `https://${process.env.AUTH0_DOMAIN}/api/v2/users`,
@@ -76,7 +85,7 @@ export async function createAuth0User(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email,
+        email: normalizedEmail,
         name,
         password,
         connection: "Username-Password-Authentication",
