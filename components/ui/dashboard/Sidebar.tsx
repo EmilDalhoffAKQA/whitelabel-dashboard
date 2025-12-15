@@ -12,6 +12,8 @@ import {
   X,
   LogOut,
   MessageSquare,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -21,7 +23,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/lib/supabase";
 
 type NavItem = {
   href: string;
@@ -33,11 +44,19 @@ type User = {
   avatarUrl?: string;
 };
 
+type Workspace = {
+  id: number;
+  name: string;
+  logo_url?: string;
+};
+
 type AppSidebarProps = {
   user: User;
   navItems: NavItem[];
   primaryColor?: string;
   logo?: string;
+  currentWorkspaceId: string;
+  currentWorkspaceName: string;
 };
 
 const iconMap: Record<string, any> = {
@@ -54,32 +73,137 @@ export function AppSidebar({
   navItems,
   primaryColor = "#2563eb",
   logo,
+  currentWorkspaceId,
+  currentWorkspaceName,
 }: AppSidebarProps) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
   const [open, setOpen] = React.useState(false);
+  const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
+  const [loadingWorkspaces, setLoadingWorkspaces] = React.useState(false);
+
+  // Fetch user's workspaces
+  React.useEffect(() => {
+    const fetchWorkspaces = async () => {
+      setLoadingWorkspaces(true);
+      try {
+        const response = await fetch("/api/workspaces");
+        if (response.ok) {
+          const data = await response.json();
+          setWorkspaces(data.workspaces || []);
+        }
+      } catch (error) {
+        console.error("Error fetching workspaces:", error);
+      } finally {
+        setLoadingWorkspaces(false);
+      }
+    };
+
+    fetchWorkspaces();
+  }, []);
 
   const SidebarContent = () => (
     <TooltipProvider delayDuration={300}>
       <div className="pb-6 md:pb-8 flex-shrink-0">
-        {logo ? (
-          <div className="w-16 h-16 md:w-20 md:h-20 rounded-3xl bg-white flex items-center justify-center mx-auto">
-            <div className="max-w-[48px] max-h-[48px] md:max-w-[64px] md:max-h-[64px] w-full h-full flex items-center justify-center">
-              <img
-                src={logo}
-                alt="Logo"
-                className="object-contain w-full h-full"
-              />
-            </div>
-          </div>
-        ) : (
-          <div
-            className="w-16 h-16 md:w-20 md:h-20 rounded-3xl flex items-center justify-center mx-auto"
-            style={{ backgroundColor: primaryColor }}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="relative group cursor-pointer">
+              {logo ? (
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-3xl bg-white flex items-center justify-center mx-auto transition-all group-hover:shadow-md group-hover:scale-105">
+                  <div className="max-w-[48px] max-h-[48px] md:max-w-[64px] md:max-h-[64px] w-full h-full flex items-center justify-center">
+                    <img
+                      src={logo}
+                      alt="Logo"
+                      className="object-contain w-full h-full"
+                    />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ChevronDown className="w-3 h-3 text-white" />
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="w-16 h-16 md:w-20 md:h-20 rounded-3xl flex items-center justify-center mx-auto transition-all group-hover:shadow-md group-hover:scale-105 relative"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  <span className="text-white font-bold text-xl md:text-2xl">
+                    D
+                  </span>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gray-800 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ChevronDown className="w-3 h-3 text-white" />
+                  </div>
+                </div>
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            side="right"
+            align="start"
+            className="w-72 bg-white border-gray-200 shadow-lg"
           >
-            <span className="text-white font-bold text-xl md:text-2xl">D</span>
-          </div>
-        )}
+            <DropdownMenuLabel className="text-gray-900 font-semibold">
+              Switch Workspace
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-gray-200" />
+            <div className="max-h-80 overflow-y-auto">
+              {workspaces.map((workspace) => {
+                const isActive =
+                  workspace.id.toString() === currentWorkspaceId;
+                return (
+                  <DropdownMenuItem
+                    key={workspace.id}
+                    onClick={() => {
+                      if (!isActive) {
+                        window.location.href = `/${workspace.id}/dashboard`;
+                      }
+                    }}
+                    className={`cursor-pointer py-3 ${
+                      isActive
+                        ? "bg-blue-50 text-blue-700"
+                        : "text-gray-900 hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      {workspace.logo_url ? (
+                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          <img
+                            src={workspace.logo_url}
+                            alt={workspace.name}
+                            className="w-8 h-8 object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: primaryColor }}
+                        >
+                          <span className="text-white font-semibold text-sm">
+                            {workspace.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <span className="flex-1 truncate font-medium">
+                        {workspace.name}
+                      </span>
+                      {isActive && (
+                        <Check className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                      )}
+                    </div>
+                  </DropdownMenuItem>
+                );
+              })}
+            </div>
+            <DropdownMenuSeparator className="bg-gray-200" />
+            <DropdownMenuItem
+              onClick={() => {
+                window.location.href = "/workspaces";
+              }}
+              className="text-gray-900 hover:bg-gray-50 cursor-pointer py-3 font-medium"
+            >
+              View all workspaces →
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="flex-1 flex items-center justify-center">

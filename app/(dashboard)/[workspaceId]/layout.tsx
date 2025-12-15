@@ -177,6 +177,8 @@ export default async function WorkspaceLayout({
             navItems={filteredNavItems}
             primaryColor={theme.primaryColor}
             logo={theme.logo}
+            currentWorkspaceId={workspaceId}
+            currentWorkspaceName={data.workspace.name}
           />
         </div>
 
@@ -187,6 +189,8 @@ export default async function WorkspaceLayout({
             navItems={filteredNavItems}
             primaryColor={theme.primaryColor}
             logo={theme.logo}
+            currentWorkspaceId={workspaceId}
+            currentWorkspaceName={data.workspace.name}
           />
         </div>
 
