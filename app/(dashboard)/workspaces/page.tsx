@@ -279,7 +279,7 @@ export default function WorkspacesPage() {
                   <div className="flex gap-2">
                     <Button
                       onClick={() => handleSelectWorkspace(ws)}
-                      className="flex-1 gap-2"
+                      className="flex-1 gap-2 cursor-pointer"
                       size="sm"
                     >
                       Open Workspace

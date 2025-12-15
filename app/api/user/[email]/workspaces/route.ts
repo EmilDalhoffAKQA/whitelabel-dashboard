@@ -34,7 +34,7 @@ export async function GET(
   // Get workspaces for user
   const { data: userWorkspaces, error: uwError } = await supabaseAdmin
     .from("user_workspaces")
-    .select("role, workspace:workspaces(id, name)")
+    .select("role, workspace:workspaces(id, name, logo_url)")
     .eq("user_id", user.id);
 
   if (uwError) {
@@ -45,6 +45,7 @@ export async function GET(
     id: uw.workspace.id,
     name: uw.workspace.name,
     role: uw.role,
+    logo_url: uw.workspace.logo_url,
   }));
 
   return NextResponse.json({ workspaces });
