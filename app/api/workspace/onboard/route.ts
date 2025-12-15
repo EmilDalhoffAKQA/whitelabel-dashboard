@@ -110,7 +110,13 @@ export async function POST(req: NextRequest) {
     } catch (auth0Error: any) {
       console.error("Auth0 error (create):", auth0Error?.message || auth0Error);
       // If user already exists in Auth0, try to fetch the existing user by email
-      if (auth0Error.message?.toLowerCase().includes("already exists")) {
+      const errorMsg = (auth0Error.message || "").toLowerCase();
+      const isAlreadyExists =
+        errorMsg.includes("already exists") ||
+        errorMsg.includes("user already exists") ||
+        auth0Error.statusCode === 409;
+
+      if (isAlreadyExists) {
         try {
           const existing = await getUserByEmail(body.adminEmail);
           if (!existing || !existing.user_id) {

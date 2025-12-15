@@ -82,7 +82,16 @@ export async function createAuth0User(
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || "Failed to create user");
+    // Auth0 returns error in different formats: { message: "..." } or { error: "...", error_description: "..." }
+    const errorMessage =
+      error.message ||
+      error.error_description ||
+      error.error ||
+      "Failed to create user";
+    const err: any = new Error(errorMessage);
+    err.statusCode = error.statusCode || response.status;
+    err.originalError = error;
+    throw err;
   }
 
   return await response.json();

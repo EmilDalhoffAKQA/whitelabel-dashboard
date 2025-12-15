@@ -69,12 +69,48 @@ export async function POST(req: NextRequest) {
       if (!userRes.ok) {
         const err = await userRes.json();
         console.error("Auth0 user creation error:", err);
-        return NextResponse.json(
-          { error: `Auth0 error: ${JSON.stringify(err)}` },
-          { status: 500 }
-        );
+
+        // If user already exists, fetch existing user instead
+        if (
+          err.message?.toLowerCase().includes("already exists") ||
+          err.statusCode === 409
+        ) {
+          try {
+            const existingUserRes = await fetch(
+              `https://${
+                process.env.AUTH0_DOMAIN
+              }/api/v2/users-by-email?email=${encodeURIComponent(email)}`,
+              {
+                headers: {
+                  authorization: `Bearer ${mgmtToken}`,
+                },
+              }
+            );
+            if (!existingUserRes.ok) {
+              return NextResponse.json(
+                { error: "Auth0 user exists but could not be retrieved" },
+                { status: 500 }
+              );
+            }
+            const existingUsers = await existingUserRes.json();
+            auth0User = existingUsers[0];
+            console.log("Reusing existing Auth0 user:", auth0User.user_id);
+          } catch (fetchErr) {
+            console.error("Failed to fetch existing Auth0 user:", fetchErr);
+            return NextResponse.json(
+              { error: `Auth0 error: ${fetchErr}` },
+              { status: 500 }
+            );
+          }
+        } else {
+          return NextResponse.json(
+            { error: `Auth0 error: ${JSON.stringify(err)}` },
+            { status: 500 }
+          );
+        }
+      } else {
+        auth0User = await userRes.json();
       }
-      auth0User = await userRes.json();
 
       // Generate password reset ticket (do NOT send via Auth0)
       const ticketRes = await fetch(
