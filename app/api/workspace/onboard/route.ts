@@ -135,19 +135,24 @@ export async function POST(req: NextRequest) {
 
           // Generate password reset ticket for existing user
           try {
-            const ticket = await generatePasswordResetTicket(
-              auth0User.user_id
-            );
+            const ticket = await generatePasswordResetTicket(auth0User.user_id);
             inviteLink = ticket.ticket;
             console.log("Generated password reset ticket for existing user");
           } catch (ticketErr) {
-            console.error("Failed to generate ticket, continuing anyway:", ticketErr);
+            console.error(
+              "Failed to generate ticket, continuing anyway:",
+              ticketErr
+            );
             // Continue without ticket - user can request password reset manually
           }
         } catch (fetchErr: any) {
           console.error("Auth0 fetch error:", fetchErr);
           return NextResponse.json(
-            { error: `Failed to fetch existing user: ${fetchErr.message || fetchErr}` },
+            {
+              error: `Failed to fetch existing user: ${
+                fetchErr.message || fetchErr
+              }`,
+            },
             { status: 500 }
           );
         }

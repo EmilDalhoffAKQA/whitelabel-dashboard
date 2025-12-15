@@ -14,7 +14,8 @@ export async function getUserByEmail(email: string) {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    const errorMessage = errorData.message || errorData.error || `HTTP ${response.status}`;
+    const errorMessage =
+      errorData.message || errorData.error || `HTTP ${response.status}`;
     console.error(`Failed to get user by email ${email}:`, errorMessage);
     throw new Error(`Failed to get user: ${errorMessage}`);
   }
