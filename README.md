@@ -73,3 +73,17 @@ Two quick ways to start a Passwordless (magic link) flow that work with Classic 
      http://localhost:3001/api/auth/passwordless/start?email=you@example.com
 
    - Important: For Classic magic links, open the email link in the same browser you used to hit the start URL.
+
+---
+
+## Guide til censorer og test-flow
+
+- Gå til `/welcome` for at starte. Herfra bliver du ført til `/onboarding`.
+- Du skal bruge en ægte emailadresse for at modtage en mail via Mailjet (Kan ende i spam)
+- Auth0 sørger desværre for, at du ikke bliver redirectet automatisk efter login. Hvis du oplever problemer, kan du altid gå direkte til `/login`.
+- Dashboardet bruger mock-data til testformål.
+- **Superadmin-adgang er deaktiveret** for at beskytte følsomme data. Forskelle mellem roller og Superadmin er beskrevet i rapporten.
+
+Har du spørgsmål, kan du finde flere detaljer i rapporten.
+
+---
